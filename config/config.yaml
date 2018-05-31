@@ -1,0 +1,41 @@
+paras:
+  samtools: /data/software/bin/samtools
+  bedtools: /data/software/bedtools2/bin/bedtools
+  lastal: /data/liangfan/pipeline/sv/bin/lastal
+
+bwa:
+  cmd: ''
+  memory: 16g
+  thread: 16
+  queue: all.q
+
+
+last:
+  cmd: 'lastal -P {thread} -Q1 {last_db} {fq} -p {params} | last-split > {output}.last.maf && maf-convert -d sam {output}.last.maf | {samtools} view -bS - | {samtools} sort -m {memory} -o {output} - && rm  {output}.last.maf'
+  memory: 16G
+  thread: 8
+  queue: all.q
+
+ngmlr:
+  cmd: 'ngmlr -t {thread} -x ont -r {ref} -q {fq} | {samtools} sort -m {memory} -o {output} -'
+  memory: 16g
+  thread: 8
+  queue: all.q
+
+sniffles:
+  cmd: '
+    sniffles
+    --report_BND
+    --ignore_sd
+    -q 0
+    --genotype
+    -n  10
+    -t 20
+    -l 50
+    -s 1
+    -m {bam}
+    -v {output}'
+  memory: 16g
+  thread: 8
+  queue: all.q
+
