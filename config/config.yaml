@@ -9,7 +9,6 @@ bwa:
   thread: 16
   queue: all.q
 
-
 last:
   cmd: 'lastal -P {thread} -Q1 {last_db} {fq} -p {params} | last-split > {output}.last.maf && maf-convert -d sam {output}.last.maf | {samtools} view -bS - | {samtools} sort -m {memory} -o {output} - && rm  {output}.last.maf'
   memory: 16G
@@ -21,6 +20,12 @@ ngmlr:
   memory: 16g
   thread: 8
   queue: all.q
+
+merge:
+    cmd: '{samtools} merge {output} {input_list}'
+    memory: 1g
+    thread: 1
+    queue: all.q
 
 sniffles:
   cmd: '

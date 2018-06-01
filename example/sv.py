@@ -7,18 +7,20 @@ from grandflow.io import readFofn
 from grandflow.Pipeline import Pipeline, Task, get_config
 
 # 读取配置文件
-config = get_config('/data/grandanalysis/grandflow/config/config.yaml')
+main_path = '/data/lipidong/grandanalysis'
+config = get_config(
+    '{main_path}/grandflow/config/config.yaml'.format(main_path=main_path))
 
 # 新建流程，同时设置流程的运行的路径
-path = '/data/grandanalysis/grandflow/example/pipeline/sv'
+path = '{main_path}/grandsv/example'.format(main_path=main_path)
 sv = Pipeline(path)
 
 # ngmlr module
 # 读取文件
 # 提供多个人家，sjm会并行运算
 fq_list = [
-    xx for xx in readFofn(
-        '/data/grandanalysis/grandflow/example/pipeline/sv/test.fq.list')
+    xx for xx in readFofn('{main_path}/grandsv/example/test.fq.list'.format(
+        main_path=main_path))
 ]
 
 ngmlr_output = [
@@ -29,7 +31,8 @@ ngmlr_output = [
 config['ngmlr'].update({
     'ref': ('/data/xieshang/database/ftp.1000genomes.ebi.ac.uk/vol1/ftp/'
             'technical/reference/human_g1k_v37.fasta'),
-    'fq': fq_list,
+    'fq':
+    fq_list,
     'output':
     ngmlr_output
 })
