@@ -50,6 +50,7 @@ def get_config(*args, file_type='yaml'):
         for config_file in args:
             f = open(config_file)
             config_dict.update(yaml.load(f))
+
     # 如果子模块中没有paras模块的key, 则更新
     # 子模块的参数优先级更高
     for key in config_dict.keys():
