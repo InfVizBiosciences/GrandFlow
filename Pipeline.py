@@ -19,7 +19,7 @@ import collections
 import copy
 import os
 
-from grandflow.stat.utils import mkdir
+from grandflow.util import mkdir
 
 sjm_template = """
 job_begin
@@ -163,7 +163,8 @@ class Task(object):
                  cmd,
                  cmd_paras={},
                  sjm_paras={},
-                 path=None,
+                 path='',
+                 output='',
                  prev_task=None,
                  **kargs):
         """init
@@ -174,6 +175,7 @@ class Task(object):
             cmd_paras (dict): cmd parameters
             prev_task (Task): the previous task which sjm need
             path (str): relative path of task
+            output (str): the path of output
             sjm_paras (dict): sjm parameters
             **kargs (dict): can set parameters of cmd
 
@@ -183,6 +185,7 @@ class Task(object):
         self._cmd_paras = cmd_paras
         self._prev_task = prev_task
         self.path = path
+        self._outptu = output
         self._kargs = kargs
         self._sjm_paras = sjm_paras
 
@@ -200,6 +203,30 @@ class Task(object):
 
         """
         return self._subname_list
+
+    @property
+    def output(self):
+        """TODO: Docstring for output.
+
+        Returns: TODO
+
+        """
+        if isinstance(list, self._output):
+            return [os.path.join(self.path, xx)
+                      for xx in self._output]
+        else:
+            return os.path.join(self.path, self._output)
+
+
+    @output.setter
+    def output(self, value):
+        """set the output path
+
+        Args:
+            value (str): output path
+
+        """
+        self._output = value
 
     def get_cmd_dict(self):
         """
@@ -227,7 +254,7 @@ class Task(object):
             return cmd_dict
 
         for ii in range(len(list(self.cmd_multi_paras_dict.values())[0])):
-            subname = '{name}_{ii}'.format(name=self._name, ii=ii)
+            subname = '{name}_{ii:0>3d}'.format(name=self._name, ii=ii)
             self._subname_list.append(subname)
             para_dict = copy.deepcopy(self._cmd_paras)
             for key in self.cmd_multi_paras_dict.keys():
@@ -296,6 +323,86 @@ class Task(object):
 
         """
         return self._name
+
+
+def aligner(name, proj_name, fq_list, config, ref_version):
+    """create aligner task
+
+    Args:
+        name (str): alinger name such as ngmlr, last
+        fq_list (list): the list of fastq file
+
+    Returns: aligner_task, merge_bam_task
+
+    """
+    aligner_output = [os.path.join(name,
+                                   sub_basename(xx,
+                                                'bam',
+                                                mid='%s.%s' % (name, ref_version)))
+                      for xx in fq_list]
+
+    config[name].update({
+        'ref': config['para'][ref_version],
+        'fq': fq_list,
+        'output': aligner_output
+})
+
+    aligner_task = Task(
+        name,
+        config[name]['cmd'],
+        cmd_paras=config[name],
+        sjm_paras=config[name],
+        path=name)
+
+    # merge bam
+    merge_bam_output = os.path.join(name, '%s.%s.merge.bam' % (proj_name, name))
+    config['merge_bam'].update({
+        'input_list':aligner_output,
+        'output':merge_bam_output
+    })
+    merge_bam_task = Task(
+        'merge_bam',
+        config['merge_bam']['cmd'],
+        cmd_paras=config['merge_bam'],
+        sjm_paras=config['merge_bam'],
+        output=merge_bam_output
+    )
+    # merge_bam.output = 'merge.bam'
+
+    return aligner_task, merge_bam_task
+
+
+def sv_caller(name, proj_name, input_bam, config):
+    """ sv_caller.
+
+    Args:
+        name (TODO): the name of sv caller
+        proj_name (str): project name
+        input_bam (str): input bam
+        config (dict): config
+
+    Returns: sv caller task
+
+    """
+    if isinstance(list, input_bam):
+        sv_caller_output = [os.path.join(name,
+                                         '%s.%s.vcf' % (proj_name, name)) for xx in input_bam]
+    else:
+        sv_caller_output = os.path.join(name, '%s.%s.vcf' % (proj_name, name) )
+
+    config[name].update({
+        'bam': input_bam,
+        'output': sv_caller_output
+    })
+    sv_caller_task = Task(
+        name,
+        config[name][cmd],
+        cmd_paras=config[name],
+        sjm_paras=config[name],
+        path=name,
+        output=sv_caller_output
+    )
+    return sv_caller_task
 
 
 def main():
