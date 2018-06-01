@@ -6,6 +6,7 @@ make pipeline
 
 # ---------
 # Change Logs:
+# 2018-05-31
 #
 # ---------
 
@@ -17,6 +18,8 @@ __status__ = 'Dev'
 import collections
 import copy
 import os
+
+from grandflow.stat.utils import mkdir
 
 sjm_template = """
 job_begin
@@ -30,12 +33,11 @@ job_end
 """
 
 
-def get_config(config_file, file_type='yaml'):
+def get_config(*args, file_type='yaml'):
     """get config from config
 
     Args:
-        conig_file (str): config file path
-
+        args (str): config file
     Kwargs:
         file_type (str): file type which can be yaml or json
 
@@ -44,8 +46,10 @@ def get_config(config_file, file_type='yaml'):
     """
     if file_type == 'yaml':
         import yaml
-        f = open(config_file)
-        config_dict = yaml.load(f)
+        config_dict = {}
+        for config_file in args:
+            f = open(config_file)
+            config_dict.update(yaml.load(f))
     # 如果子模块中没有paras模块的key, 则更新
     # 子模块的参数优先级更高
     for key in config_dict.keys():
@@ -61,14 +65,24 @@ def get_config(config_file, file_type='yaml'):
 class Pipeline(object):
     """generate the pipeline"""
 
-    def __init__(self, path=None):
-        """init """
+    def __init__(self, name=None, path=None):
+        """init
+
+        Args:
+            path (str):
+              the pipeline path, default is current word directory
+
+        """
         if path:
             self._path = path
-            if not os.path.exists(path):
-                os.makedirs(path)
+            os.mkdir(path)
         else:
-            self._path = './'
+            self._path = os.getcwd()
+
+        if name:
+            self._name = name
+        else:
+            self._name = ''
 
         self.tasks = []
 
@@ -81,6 +95,9 @@ class Pipeline(object):
         """
         if prev_task:
             task.set_prev_task(prev_task)
+
+        task.abs_path = os.path.join(self._path, task.path)
+        mkdir(task.abs_path)
 
         self.tasks.append(task)
 
@@ -144,8 +161,9 @@ class Task(object):
                  name,
                  cmd,
                  cmd_paras={},
+                 sjm_paras={},
+                 path=None,
                  prev_task=None,
-                 sjm_paras=None,
                  **kargs):
         """init
 
@@ -154,6 +172,7 @@ class Task(object):
             cmd (str): cmd line which can include {template}
             cmd_paras (dict): cmd parameters
             prev_task (Task): the previous task which sjm need
+            path (str): relative path of task
             sjm_paras (dict): sjm parameters
             **kargs (dict): can set parameters of cmd
 
@@ -162,6 +181,7 @@ class Task(object):
         self._cmd = cmd
         self._cmd_paras = cmd_paras
         self._prev_task = prev_task
+        self.path = path
         self._kargs = kargs
         self._sjm_paras = sjm_paras
 
