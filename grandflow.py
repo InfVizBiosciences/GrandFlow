@@ -24,7 +24,7 @@ import pdb
 
 from grandflow.Pipeline import Pipeline, Task, get_config, aligner, sv_caller
 from grandflow.util import mkdir, sub_basename, sjm_paras, read_line
-from grandsv.lib.sv import sv
+from grandflow.sv import sv
 
 
 def get_args():
