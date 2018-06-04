@@ -19,7 +19,8 @@ import collections
 import copy
 import os
 
-from grandflow.util import mkdir
+from grandflow.util import mkdir, sub_basename
+
 
 sjm_template = """
 job_begin
@@ -76,7 +77,7 @@ class Pipeline(object):
         """
         if path:
             self._path = path
-            os.mkdir(path)
+            mkdir(path)
         else:
             self._path = os.getcwd()
 
@@ -185,7 +186,7 @@ class Task(object):
         self._cmd_paras = cmd_paras
         self._prev_task = prev_task
         self.path = path
-        self._outptu = output
+        self._output = output
         self._kargs = kargs
         self._sjm_paras = sjm_paras
 
@@ -211,7 +212,7 @@ class Task(object):
         Returns: TODO
 
         """
-        if isinstance(list, self._output):
+        if isinstance(self._output, list):
             return [os.path.join(self.path, xx)
                       for xx in self._output]
         else:
@@ -338,11 +339,11 @@ def aligner(name, proj_name, fq_list, config, ref_version):
     aligner_output = [os.path.join(name,
                                    sub_basename(xx,
                                                 'bam',
-                                                mid='%s.%s' % (name, ref_version)))
+                                                mid='.%s.%s' % (name, ref_version)))
                       for xx in fq_list]
 
     config[name].update({
-        'ref': config['para'][ref_version],
+        'ref': config['paras'][ref_version],
         'fq': fq_list,
         'output': aligner_output
 })
@@ -357,7 +358,7 @@ def aligner(name, proj_name, fq_list, config, ref_version):
     # merge bam
     merge_bam_output = os.path.join(name, '%s.%s.merge.bam' % (proj_name, name))
     config['merge_bam'].update({
-        'input_list':aligner_output,
+        'input_list': ' '.join(aligner_output),
         'output':merge_bam_output
     })
     merge_bam_task = Task(
@@ -384,7 +385,7 @@ def sv_caller(name, proj_name, input_bam, config):
     Returns: sv caller task
 
     """
-    if isinstance(list, input_bam):
+    if isinstance(input_bam, list):
         sv_caller_output = [os.path.join(name,
                                          '%s.%s.vcf' % (proj_name, name)) for xx in input_bam]
     else:
@@ -396,7 +397,7 @@ def sv_caller(name, proj_name, input_bam, config):
     })
     sv_caller_task = Task(
         name,
-        config[name][cmd],
+        config[name]['cmd'],
         cmd_paras=config[name],
         sjm_paras=config[name],
         path=name,
