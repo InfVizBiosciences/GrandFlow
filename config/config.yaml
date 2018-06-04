@@ -2,6 +2,8 @@ paras:
   samtools: /data/software/bin/samtools
   bedtools: /data/software/bedtools2/bin/bedtools
   lastal: /data/liangfan/pipeline/sv/bin/lastal
+  hg38: /data/xieshang/database/ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa
+  hg19: /data/xieshang/database/ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/human_g1k_v37.fasta
 
 bwa:
   cmd: ''
@@ -21,8 +23,8 @@ ngmlr:
   thread: 8
   queue: all.q
 
-merge:
-    cmd: '{samtools} merge {output} {input_list}'
+merge_bam:
+    cmd: '{samtools} merge -f {output} {input_list}'
     memory: 1g
     thread: 1
     queue: all.q
