@@ -235,8 +235,8 @@ class ReadStat(object):
             n50=N50,
             title='Histogram of read lengths(%s)' % self._proj_name)
         # write out record length for plot
-        with open("record.len", "w") as fh:
-            fh.write("\n".join(map(str, lengths)))
+        # with open("record.len", "w") as fh:
+            # fh.write("\n".join(map(str, lengths)))
 
         return reads_stat_dict
 
@@ -244,12 +244,13 @@ class ReadStat(object):
 def fofn2list(fofn):
     r = []
     with open(fofn) as fh:
-        for line in fh:
+        for line in fh.readlines():
             line = line.strip()
             if line == '':
                 continue
             if line.startswith("#"):
                 continue
+
             r.append(line)
     return r
 

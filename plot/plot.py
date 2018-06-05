@@ -39,8 +39,8 @@ import matplotlib.pyplot as plt
 from matplotlib import colors as mcolors
 import seaborn as sns
 from pauvre.marginplot import margin_plot
-import plotly
-import plotly.graph_objs as go
+# import plotly
+# import plotly.graph_objs as go
 
 
 class Plot(object):
@@ -447,7 +447,8 @@ def length_plots(array, name, path, title=None,
         plt.ticklabel_format(style='plain', axis='y')
         fig = ax.get_figure()
         histogram.fig = fig
-        fig.savefig(histogram.path, format=figformat, dpi=100, bbox_inches="tight")
+        fig.set_size_inches(4, 3)
+        fig.savefig(histogram.path, format=figformat, dpi=300, bbox_inches="tight")
         plt.close("all")
 
         # log_histogram = Plot(

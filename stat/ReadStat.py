@@ -16,19 +16,23 @@ from grandflow.plot.plot import length_plots
 class ReadStat(object):
     """Statistic the reads length, GC content """
 
-    def __init__(self, proj_name, file_list=None, min_len=0):
-        """init
+    def __init__(self, proj_name, fqs, fofn, min_len=0, thread=1):
+        """TODO: Docstring for __init__.
 
         Args:
-            file_list (list): the list including the fastq/fasta file path
-            min_len (int): to statistic the reads which length more than min_len
-
+            _proj_name (TODO): project name
+            _fqs (list): fastq files list
+            _fofn (str): file path including fastq, line by line
+            _min_len (int): count the reads which length above min_len, default=0
+            _thread (int): thread, default=1
         Returns: TODO
 
         """
         self._proj_name = proj_name
-        self._file_list = file_list
+        self._fqs = fqs
+        self._fofn = fofn
         self._min_len = min_len
+        self._thread = thread
 
     def get_length(self, filename, index, min_len):
         """
@@ -112,12 +116,7 @@ class ReadStat(object):
         """
         pass
 
-    def seq_stat(self,
-                 filenames,
-                 ngs=False,
-                 fofn=False,
-                 thread=1,
-                 min_len=0):
+    def length_stat(self):
         """
         statistics on fastq files
         :param filenames:
@@ -139,9 +138,9 @@ class ReadStat(object):
         reads_stat_dict = collections.OrderedDict()
         reads_dis_dict = collections.OrderedDict()
         # 1. get the lengths of each fastA/Q file
-        if fofn:
+        if self.fofn:
             file_list = []
-            for f in filenames:
+            for f in self.filenames:
                 file_list += fofn2list(f)
         else:
             file_list = filenames
@@ -176,7 +175,7 @@ class ReadStat(object):
         average_length = int(total_length / reads_number)
         longest = lengths[0]
         # reads_number = reads_number
-
+        # self._lengths = lengths
         reads_stat_dict = {
             'length_sort': lengths,
             'file_num': file_num,
@@ -201,12 +200,12 @@ class ReadStat(object):
     average length:\t{average_length}
     longest length:\t{longest}
     """.format(**locals()))
+        return reads_stat_dict
 
+    def length_distribute(self, lengths):
         # 2. get the N10-N90 statstics
         # length: the N{i} value; number: number of reads which length >= N{i}
         # if the input file is ngs short reads, skip the following steps.
-        if ngs:
-            return 1
 
         print("Distribution of record length")
         print("%5s\t%15s\t%15s\t%10s" % ("Type", "Bases", "Count", "%Bases"))
@@ -235,8 +234,8 @@ class ReadStat(object):
             n50=N50,
             title='Histogram of read lengths(%s)' % self._proj_name)
         # write out record length for plot
-        with open("record.len", "w") as fh:
-            fh.write("\n".join(map(str, lengths)))
+        # with open("record.len", "w") as fh:
+            # fh.write("\n".join(map(str, lengths)))
 
         return reads_stat_dict
 
@@ -244,12 +243,13 @@ class ReadStat(object):
 def fofn2list(fofn):
     r = []
     with open(fofn) as fh:
-        for line in fh:
+        for line in fh.readlines():
             line = line.strip()
             if line == '':
                 continue
             if line.startswith("#"):
                 continue
+
             r.append(line)
     return r
 
@@ -310,7 +310,7 @@ description:
 
 def main():
     args = get_args()
-    rs = ReadStat(args.proj_name)
+    rs = ReadStat(args.proj_name, args.input, args.ngs, args.fofn, args.thread, args.min_len)
     rs.seq_stat(args.input, args.ngs, args.fofn, args.thread, args.min_len)
 
 

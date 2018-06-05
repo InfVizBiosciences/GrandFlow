@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
@@ -16,8 +16,6 @@ __version__ = '0.0.1'
 __status__ = 'Dev'
 
 import sys
-# reload(sys)
-# sys.setdefaultencoding('utf-8')
 import argparse
 import logging
 import pdb
