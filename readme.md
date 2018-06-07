@@ -1,22 +1,5 @@
 # GrandFlow 说明
 
-## 目录结构
-
-```
-├── grandflow  # 供python import 调用
-│   ├── core   # 存放基础库文件，比如自己写的Python包，区别于Utils，必须是可以被很多脚本调用的自写库, 比如读写fastq、fasta的IO库
-│   └── utils  # 存放常用脚本
-├── database  # 存放数据库文件，比如hg19、hg38等数据库
-├── docs  # 存放对脚本进行解释的文档，采用Sphinx根据docstring自动生成文档
-├── pipeline  # 存放项目相关的脚本文件、配置文件
-│   └── bionanoFSHD # Bionano-FSHD项目流程
-├── readme.md # 本说明文件
-├── examples  # 示例文件
-├── test  # 脚本进行测试的目录，可以存放测试脚本及输出文件
-└── software -> /data/software  # 第三方软件，目前软连接到 /data/software，所有公共软件必须安装在此
-```
-
-- 注：GrandFlow计划采用Git进行版本控制、团队协作，为了方便传输，database以及software等大文件不进行git操作。
 
 ## 代码规范
 
@@ -39,7 +22,7 @@ export PYTHONPATH=/data/GrandFlow:$PYTHONPATH
 
 使用例子
 
-/data/GrandFlow/test
+./example
 
 
 读取 fastq
@@ -47,7 +30,7 @@ export PYTHONPATH=/data/GrandFlow:$PYTHONPATH
 ```
 from grandflow.core.io import FastqReader
 
-fr = FastqReader('/data/GrandFlow/test/data/test.fq.gz')
+fr = FastqReader('example/data/test.fq.gz')
 for xx in fr:
     print('header:' + xx.header)
     print('comment:' + xx.comment)
@@ -61,13 +44,14 @@ for xx in fr:
 
 from grandflow.core.io import VcfReader
 
-vr = VcfReader('/data/GrandFlow/test/data/test.vcf')
+vr = VcfReader('example/data/test.vcf')
 for xx in vr:
     print('chrom:' + xx.chrom)
     print('id:' + xx.id)
     print(xx.info)
     break
 ```
+
 
 ## 文档
 
