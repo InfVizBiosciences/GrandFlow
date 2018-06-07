@@ -10,7 +10,7 @@ from multiprocessing import Pool
 import numpy as np
 
 from grandflow.io import FastaReader, FastqReader
-from grandflow.plot.plot import length_plots
+from grandflow.plot.lib import length_plots
 
 
 class ReadStat(object):
@@ -114,7 +114,6 @@ class ReadStat(object):
 
     def seq_stat(self,
                  filenames,
-                 ngs=False,
                  fofn=False,
                  thread=1,
                  min_len=0):
@@ -204,9 +203,6 @@ class ReadStat(object):
 
         # 2. get the N10-N90 statstics
         # length: the N{i} value; number: number of reads which length >= N{i}
-        # if the input file is ngs short reads, skip the following steps.
-        if ngs:
-            return 1
 
         print("Distribution of record length")
         print("%5s\t%15s\t%15s\t%10s" % ("Type", "Bases", "Count", "%Bases"))
@@ -231,7 +227,7 @@ class ReadStat(object):
         length_plots(
             np.array(lengths),
             'length',
-            self._proj_name + '.',
+            os.path.join(outdir, self._proj_name + '.'),
             n50=N50,
             title='Histogram of read lengths(%s)' % self._proj_name)
         # write out record length for plot
@@ -302,9 +298,8 @@ description:
         default=1,
         help="number of thread process")
     args.add_argument(
-        "-ngs",
-        action="store_true",
-        help="input fastq reads is short reads from ngs")
+        "--outdir",
+        help="output directory")
 
     return args.parse_args()
 
@@ -312,7 +307,7 @@ description:
 def main():
     args = get_args()
     rs = ReadStat(args.proj_name)
-    rs.seq_stat(args.input, args.ngs, args.fofn, args.thread, args.min_len)
+    rs.seq_stat(args.input, args.fofn, args.thread, args.min_len, args.outdir)
 
 
 if __name__ == "__main__":

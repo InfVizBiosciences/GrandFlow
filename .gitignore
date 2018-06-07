@@ -112,5 +112,7 @@ docs/source/
 **.png
 **.jpg
 **.gz
+**.bam
+**.bai
 example/plot
 

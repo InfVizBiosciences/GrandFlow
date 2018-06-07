@@ -19,6 +19,7 @@ import collections
 import copy
 import os
 
+import grandflow
 from grandflow.util import mkdir, sub_basename
 
 
@@ -51,11 +52,14 @@ def get_config(*args, file_type='yaml'):
         for config_file in args:
             f = open(config_file)
             config_dict.update(yaml.load(f))
+    # config_dict['paras'] = {}
+    config_dict['paras'].update(config_dict['database'])
+    config_dict['paras'].update(config_dict['softwares'])
 
     # 如果子模块中没有paras模块的key, 则更新
     # 子模块的参数优先级更高
     for key in config_dict.keys():
-        if key != 'paras':
+        if key not in  ['paras', 'database', 'softwares']:
             config_dict[key].update({
                 k: v
                 for k, v in config_dict['paras'].items()
@@ -67,7 +71,7 @@ def get_config(*args, file_type='yaml'):
 class Pipeline(object):
     """generate the pipeline"""
 
-    def __init__(self, name=None, path=None):
+    def __init__(self, name=None, path=None, sjm_bin=None):
         """init
 
         Args:
@@ -86,7 +90,12 @@ class Pipeline(object):
         else:
             self._name = ''
 
+        if not sjm_bin:
+           self._sjm_bin = 'sjm'
+
         self.tasks = []
+        self._sjm_output = None
+        self._sjm_bin = sjm_bin
 
     def add_task(self, task, prev_task=None):
         """add task to the pipeline
@@ -100,7 +109,7 @@ class Pipeline(object):
 
         task.abs_path = os.path.join(self._path, task.path)
         mkdir(task.abs_path)
-
+        task.proj_name = self._name # set task project name
         self.tasks.append(task)
 
     def sjm(self, output=None):
@@ -132,8 +141,26 @@ class Pipeline(object):
             with open(output, 'w') as f:
                 f.write(cmd_chunk_str + '\n')
                 f.write(order_chunk_str + '\n')
+            self._sjm_output = output
         else:
             return '\n'.join([cmd_chunk_str, order_chunk_str])
+
+    def sjm_run(self):
+        """run sjm
+
+        Args:
+            arg1 (TODO): TODO
+
+        Returns: TODO
+
+        """
+        os.chdir(self._path)
+        sjm_path = os.path.join(self._path, 'sjm')
+        os.system('{sjm} -i {sjm_file}'.format(
+            bashrc=os.path.join(os.path.dirname(grandflow.__file__), 'config', 'bashrc'),
+            sjm=self._sjm_bin,
+            sjm_file=self._sjm_output
+        ))
 
     def shell(self, output=None):
         """if output, write the shell command line to the output,
@@ -175,7 +202,7 @@ class Task(object):
             cmd (str): cmd line which can include {template}
             cmd_paras (dict): cmd parameters
             prev_task (Task): the previous task which sjm need
-            path (str): relative path of task
+            path (str): relative path of task, will make the path as  subdirectory of the project path
             output (str): the path of output
             sjm_paras (dict): sjm parameters
             **kargs (dict): can set parameters of cmd
@@ -190,9 +217,8 @@ class Task(object):
         self._kargs = kargs
         self._sjm_paras = sjm_paras
 
+        self.proj_name = ''
         self._subname_list = []
-        self.cmd_multi_paras_dict = {}
-        self.cmd_dict = self.get_cmd_dict()
 
         if self._cmd_paras:
             self._cmd_paras.update(self._kargs)
@@ -248,14 +274,14 @@ class Task(object):
                     cmd_count = len(v)
 
         if not self.cmd_multi_paras_dict:
-            subname = self._name
-            self._subname_list = [self._name]
+            subname = '%s_%s' % (self.proj_name, self._name)
+            self._subname_list = [subname]
             # pdb.set_trace()
             cmd_dict[subname] = self._cmd.format(**self._cmd_paras)
             return cmd_dict
 
         for ii in range(len(list(self.cmd_multi_paras_dict.values())[0])):
-            subname = '{name}_{ii:0>3d}'.format(name=self._name, ii=ii)
+            subname = '{proj_name}_{name}_{ii:0>3d}'.format(proj_name=self.proj_name, name=self._name, ii=ii)
             self._subname_list.append(subname)
             para_dict = copy.deepcopy(self._cmd_paras)
             for key in self.cmd_multi_paras_dict.keys():
@@ -297,6 +323,8 @@ class Task(object):
         """
         sjm_cmd_list = []
 
+        self.cmd_multi_paras_dict = {}
+        self.cmd_dict = self.get_cmd_dict()
         if not self._sjm_paras:
             raise ValueError('The sjm parameters not exists')
 
@@ -312,6 +340,8 @@ class Task(object):
         Returns: TODO
 
         """
+        self.cmd_multi_paras_dict = {}
+        self.cmd_dict = self.get_cmd_dict()
         shell_cmd = []
         for subname, cmd in self.cmd_dict.items():
             shell_cmd.append('# %s' % subname)
@@ -333,6 +363,7 @@ def aligner(name, proj_name, fq_list, config, ref_version):
         name (str): alinger name such as ngmlr, last
         fq_list (list): the list of fastq file
 
+    output bam format fastq's base name + aliger + ref version
     Returns: aligner_task, merge_bam_task
 
     """
@@ -405,6 +436,60 @@ def sv_caller(name, proj_name, input_bam, config):
     )
     return sv_caller_task
 
+
+def fastq_stat(name, proj_name, fq_list, config):
+    """TODO: Docstring for fastq_stat.
+
+    Args:
+        arg1 (TODO): TODO
+
+    Returns: TODO
+
+    """
+    config[name].update({
+        'fq_list': fq_list,
+        'proj_name': proj_name,
+        'out_dir': name
+    })
+
+    fastq_stat_task = Task(
+        name,
+        config[name]['cmd'],
+        cmd_paras=config[name],
+        sjm_paras=config[name],
+        path='stat'
+    )
+    return fastq_stat_task
+
+
+def bam_stat(name, proj_name, input_bam, config):
+    """stat bam and generate the plot
+
+    Args:
+        name (str): 'bam_stat'
+        proj_name (TODO): project name
+        bam_list (TODO): bam
+
+    Returns: TODO
+
+    """
+    if isinstance(input_bam, list):
+        input_bam = ' '.join(input_bam)
+
+    config[name].update({
+        'input_bam': input_bam,
+        'proj_name': proj_name,
+        'out_dir': 'stat'
+    })
+
+    bam_stat_task = Task(
+        'bam_stat',
+        config[name]['cmd'],
+        cmd_paras=config[name],
+        sjm_paras=config[name],
+        path='stat'
+    )
+    return bam_stat_task
 
 def main():
     print('Pipeline Moudle')
