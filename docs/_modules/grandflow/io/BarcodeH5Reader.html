@@ -1,0 +1,433 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="cn">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>grandflow.io.BarcodeH5Reader &#8212; GrandFlow v0.0.1 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for grandflow.io.BarcodeH5Reader</h1><div class="highlight"><pre>
+<span></span><span class="c1">#coding = utf-8</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">h5py</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">grandflow.util</span> <span class="k">import</span> <span class="n">h5py_dummy</span>
+    <span class="n">h5py</span> <span class="o">=</span> <span class="n">h5py_dummy</span><span class="p">()</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">n</span>
+
+<span class="kn">from</span> <span class="nn">grandflow.io.FofnIO</span> <span class="k">import</span> <span class="n">readFofn</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">reduce</span>
+
+<span class="n">BARCODE_DELIMITER</span> <span class="o">=</span> <span class="s2">&quot;--&quot;</span>
+<span class="n">BC_DS_PATH</span>        <span class="o">=</span> <span class="s2">&quot;BarcodeCalls/best&quot;</span>
+<span class="n">BC_DS_ALL_PATH</span>    <span class="o">=</span> <span class="s2">&quot;BarcodeCalls/all&quot;</span>
+
+
+<div class="viewcode-block" id="LabeledZmw"><a class="viewcode-back" href="../../../grandflow.io.html#grandflow.io.BarcodeH5Reader.LabeledZmw">[docs]</a><span class="k">class</span> <span class="nc">LabeledZmw</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A scored ZMW represents a ZMW object and its corresponding</span>
+<span class="sd">    barcode scores. Some fields are considered optional&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">holeNumber</span><span class="p">,</span> <span class="n">nScored</span><span class="p">,</span> <span class="n">bestIdx</span><span class="p">,</span> <span class="n">bestScore</span><span class="p">,</span>
+                 <span class="n">secondBestIdx</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">secondBestScore</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+                 <span class="n">allScores</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_holeNumber</span> <span class="o">=</span> <span class="n">holeNumber</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nScored</span> <span class="o">=</span> <span class="n">nScored</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bestIdx</span> <span class="o">=</span> <span class="n">bestIdx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bestScore</span> <span class="o">=</span> <span class="n">bestScore</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_secondBestIdx</span> <span class="o">=</span> <span class="n">secondBestIdx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_secondBestScore</span> <span class="o">=</span> <span class="n">secondBestScore</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_allScores</span> <span class="o">=</span> <span class="n">allScores</span>
+
+<div class="viewcode-block" id="LabeledZmw.toBestRecord"><a class="viewcode-back" href="../../../grandflow.io.html#grandflow.io.BarcodeH5Reader.LabeledZmw.toBestRecord">[docs]</a>    <span class="k">def</span> <span class="nf">toBestRecord</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a summary record suitable for storage&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">holeNumber</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nScored</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bestIdx</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bestScore</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">secondBestIdx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">secondBestScore</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LabeledZmw.fromBestRecord"><a class="viewcode-back" href="../../../grandflow.io.html#grandflow.io.BarcodeH5Reader.LabeledZmw.fromBestRecord">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">fromBestRecord</span><span class="p">(</span><span class="n">npRow</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">LabeledZmw</span><span class="p">(</span><span class="n">npRow</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">npRow</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">npRow</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                          <span class="n">npRow</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">npRow</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">npRow</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="kc">None</span><span class="p">)</span></div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">holeNumber</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_holeNumber</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">nScored</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nScored</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">bestIdx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bestIdx</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">bestScore</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bestScore</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">averageScore</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">0</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nScored</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">bestScore</span><span class="o">//</span><span class="bp">self</span><span class="o">.</span><span class="n">nScored</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">scoreRatio</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">1</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">secondBestScore</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">bestScore</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">bestScore</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">secondBestScore</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">secondBestIdx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_secondBestIdx</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">secondBestScore</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_secondBestScore</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">allScores</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_allScores</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;(holeNumber = </span><span class="si">%d</span><span class="s2">, nScored = </span><span class="si">%d</span><span class="s2">, bestIdx = </span><span class="si">%d</span><span class="s2">, bestScore = </span><span class="si">%d</span><span class="s2">, averageScore = </span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> \
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">holeNumber</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nScored</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bestIdx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bestScore</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">averageScore</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="writeBarcodeH5"><a class="viewcode-back" href="../../../grandflow.io.html#grandflow.io.BarcodeH5Reader.writeBarcodeH5">[docs]</a><span class="k">def</span> <span class="nf">writeBarcodeH5</span><span class="p">(</span><span class="n">labeledZmws</span><span class="p">,</span> <span class="n">labeler</span><span class="p">,</span> <span class="n">outFile</span><span class="p">,</span>
+                   <span class="n">writeExtendedInfo</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Write a barcode file from a list of labeled ZMWs. In addition</span>
+<span class="sd">    to labeledZmws, this function takes a</span>
+<span class="sd">    pbbarcode.BarcodeLabeler.&quot;&quot;&quot;</span>
+    <span class="n">bestScores</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">z</span><span class="o">.</span><span class="n">toBestRecord</span><span class="p">(),</span> <span class="n">labeledZmws</span><span class="p">)</span>
+    <span class="n">outDta</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">bestScores</span><span class="p">)</span>
+    <span class="n">outH5</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">outFile</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">BC_DS_PATH</span> <span class="ow">in</span> <span class="n">outH5</span><span class="p">:</span>
+        <span class="k">del</span> <span class="n">outH5</span><span class="p">[</span><span class="n">BC_DS_PATH</span><span class="p">]</span>
+
+    <span class="n">bestDS</span> <span class="o">=</span> <span class="n">outH5</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="n">BC_DS_PATH</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">outDta</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="s2">&quot;int32&quot;</span><span class="p">)</span>
+    <span class="n">bestDS</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;movieName&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">labeler</span><span class="o">.</span><span class="n">movieName</span>
+    <span class="n">bestDS</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;barcodes&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">labeler</span><span class="o">.</span><span class="n">barcodeLabels</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">new_vlen</span><span class="p">(</span><span class="nb">str</span><span class="p">))</span>
+    <span class="n">bestDS</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;columnNames&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">&#39;holeNumber&#39;</span><span class="p">,</span> <span class="s1">&#39;nAdapters&#39;</span><span class="p">,</span> <span class="s1">&#39;barcodeIdx1&#39;</span><span class="p">,</span>
+                                           <span class="s1">&#39;barcodeScore1&#39;</span><span class="p">,</span> <span class="s1">&#39;barcodeIdx2&#39;</span><span class="p">,</span> <span class="s1">&#39;barcodeScore2&#39;</span><span class="p">],</span>
+                                          <span class="n">dtype</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">new_vlen</span><span class="p">(</span><span class="nb">str</span><span class="p">))</span>
+    <span class="n">bestDS</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;scoreMode&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">labeler</span><span class="o">.</span><span class="n">scoreMode</span>
+
+    <span class="k">if</span> <span class="n">writeExtendedInfo</span><span class="p">:</span>
+        <span class="c1"># here we use the &#39;names&#39; because each barcode is scored</span>
+        <span class="c1"># individually.</span>
+        <span class="n">nBarcodes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">labeler</span><span class="o">.</span><span class="n">barcodeNames</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">makeArray</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+            <span class="n">a</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">a</span>
+
+        <span class="k">def</span> <span class="nf">makeRecord</span><span class="p">(</span><span class="n">lZmw</span><span class="p">):</span>
+            <span class="n">zmws</span> <span class="o">=</span> <span class="n">makeArray</span><span class="p">(</span><span class="n">nBarcodes</span> <span class="o">*</span> <span class="n">lZmw</span><span class="o">.</span><span class="n">nScored</span><span class="p">,</span> <span class="n">lZmw</span><span class="o">.</span><span class="n">holeNumber</span><span class="p">)</span>
+            <span class="n">adapters</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">makeArray</span><span class="p">(</span><span class="n">nBarcodes</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> \
+                                          <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">lZmw</span><span class="o">.</span><span class="n">nScored</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)])</span>
+            <span class="n">idxs</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nBarcodes</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> \
+                                      <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">lZmw</span><span class="o">.</span><span class="n">nScored</span><span class="p">)])</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">lZmw</span><span class="o">.</span><span class="n">allScores</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">n</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">zmws</span><span class="p">,</span> <span class="n">adapters</span><span class="p">,</span> <span class="n">idxs</span><span class="p">,</span> <span class="n">scores</span><span class="p">)))</span>
+
+        <span class="n">records</span> <span class="o">=</span> <span class="p">[</span><span class="n">makeRecord</span><span class="p">(</span><span class="n">lZmw</span><span class="p">)</span> <span class="k">for</span> <span class="n">lZmw</span> <span class="ow">in</span> <span class="n">labeledZmws</span> <span class="k">if</span> <span class="n">lZmw</span><span class="o">.</span><span class="n">allScores</span><span class="p">]</span>
+        <span class="n">records</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">records</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">BC_DS_ALL_PATH</span> <span class="ow">in</span> <span class="n">outH5</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">outH5</span><span class="p">[</span><span class="n">BC_DS_ALL_PATH</span><span class="p">]</span>
+        <span class="n">allDS</span> <span class="o">=</span> <span class="n">outH5</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="n">BC_DS_ALL_PATH</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">records</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="s1">&#39;int32&#39;</span><span class="p">)</span>
+        <span class="n">allDS</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;movieName&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">labeler</span><span class="o">.</span><span class="n">movieName</span>
+        <span class="c1"># note names versus labels.</span>
+        <span class="n">allDS</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;barcodes&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">labeler</span><span class="o">.</span><span class="n">barcodeNames</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">new_vlen</span><span class="p">(</span><span class="nb">str</span><span class="p">))</span>
+        <span class="n">allDS</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;columnNames&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">&#39;holeNumber&#39;</span><span class="p">,</span> <span class="s1">&#39;adapter&#39;</span><span class="p">,</span> <span class="s1">&#39;barcodeIdx&#39;</span><span class="p">,</span> <span class="s1">&#39;score&#39;</span><span class="p">],</span>
+                                             <span class="n">dtype</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">new_vlen</span><span class="p">(</span><span class="nb">str</span><span class="p">))</span>
+    <span class="c1"># close the file at the very end.</span>
+    <span class="n">outH5</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="BarcodeH5Reader"><a class="viewcode-back" href="../../../grandflow.io.html#grandflow.io.BarcodeH5Reader.BarcodeH5Reader">[docs]</a><span class="k">class</span> <span class="nc">BarcodeH5Reader</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">h5File</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;Invalid or nonexistent bc file </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">fname</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">bestDS</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5File</span><span class="p">[</span><span class="n">BC_DS_PATH</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scoreMode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bestDS</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;scoreMode&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_barcodeLabels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bestDS</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;barcodes&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_movieName</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bestDS</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;movieName&#39;</span><span class="p">]</span>
+        <span class="c1"># zmw =&gt; LabeledZmw</span>
+        <span class="n">labeledZmws</span> <span class="o">=</span> <span class="p">[</span><span class="n">LabeledZmw</span><span class="o">.</span><span class="n">fromBestRecord</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bestDS</span><span class="p">[</span><span class="n">i</span><span class="p">,:])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span>
+                       <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bestDS</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labeledZmws</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">lZmw</span><span class="o">.</span><span class="n">holeNumber</span><span class="p">,</span> <span class="n">lZmw</span><span class="p">)</span> <span class="k">for</span> <span class="n">lZmw</span> <span class="ow">in</span> <span class="n">labeledZmws</span><span class="p">])</span>
+
+        <span class="c1"># barcode =&gt; LabeledZmws</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bcLabelToLabeledZmws</span> <span class="o">=</span> <span class="p">{</span><span class="n">l</span><span class="p">:[]</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">barcodeLabels</span><span class="p">}</span>
+        <span class="k">for</span> <span class="n">lZmw</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labeledZmws</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bcLabelToLabeledZmws</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">barcodeLabels</span><span class="p">[</span><span class="n">lZmw</span><span class="o">.</span><span class="n">bestIdx</span><span class="p">]]</span>
+            <span class="n">d</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lZmw</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">holeNumbers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labeledZmws</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">barcodeLabels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_barcodeLabels</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">scoreMode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;String specifying whether the barcodes were score symmetrically or in pairs&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scoreMode</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">movieName</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_movieName</span>
+
+<div class="viewcode-block" id="BarcodeH5Reader.labeledZmwFromHoleNumber"><a class="viewcode-back" href="../../../grandflow.io.html#grandflow.io.BarcodeH5Reader.BarcodeH5Reader.labeledZmwFromHoleNumber">[docs]</a>    <span class="k">def</span> <span class="nf">labeledZmwFromHoleNumber</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">holeNumber</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a LabeledZmw object from the holeNumber&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">labeledZmws</span><span class="p">[</span><span class="n">holeNumber</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;holeNumber </span><span class="si">%d</span><span class="s2"> not labeled&quot;</span> <span class="o">%</span> <span class="n">holeNumber</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BarcodeH5Reader.labeledZmwsFromBarcodeLabel"><a class="viewcode-back" href="../../../grandflow.io.html#grandflow.io.BarcodeH5Reader.BarcodeH5Reader.labeledZmwsFromBarcodeLabel">[docs]</a>    <span class="k">def</span> <span class="nf">labeledZmwsFromBarcodeLabel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bcLabel</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a list of LabeledZmw objects for the particular</span>
+<span class="sd">        barcode label, an empty list if there are no ZMWs for this</span>
+<span class="sd">        barcode.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bcLabelToLabeledZmws</span><span class="p">[</span><span class="n">bcLabel</span><span class="p">]</span></div>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">holeNumbers</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">labeledZmws</span><span class="p">[</span><span class="n">key</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="MPBarcodeH5Reader"><a class="viewcode-back" href="../../../grandflow.io.html#grandflow.io.BarcodeH5Reader.MPBarcodeH5Reader">[docs]</a><span class="k">class</span> <span class="nc">MPBarcodeH5Reader</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parts</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parts</span> <span class="o">=</span> <span class="n">parts</span>
+        <span class="k">def</span> <span class="nf">rng</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">n</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="c1"># these aren&#39;t the ranges of ZMWs, but the ranges for the</span>
+        <span class="c1"># scored ZMWs.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bins</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">z</span> <span class="p">:</span> <span class="n">rng</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">holeNumbers</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parts</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MPBarcodeH5Reader.choosePart"><a class="viewcode-back" href="../../../grandflow.io.html#grandflow.io.BarcodeH5Reader.MPBarcodeH5Reader.choosePart">[docs]</a>    <span class="k">def</span> <span class="nf">choosePart</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">holeNumber</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">b</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_bins</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">holeNumber</span> <span class="o">&gt;=</span> <span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="n">holeNumber</span> <span class="o">&lt;=</span> <span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="c1"># Return None meaning the zmw is ouf of the range of</span>
+        <span class="c1"># the scored ZMWs for all parts.</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">barcodeLabels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">barcodeLabels</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">scoreMode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;String specifying whether the barcodes were score symmetrically or in pairs&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">scoreMode</span>
+
+<div class="viewcode-block" id="MPBarcodeH5Reader.labeledZmwFromHoleNumber"><a class="viewcode-back" href="../../../grandflow.io.html#grandflow.io.BarcodeH5Reader.MPBarcodeH5Reader.labeledZmwFromHoleNumber">[docs]</a>    <span class="k">def</span> <span class="nf">labeledZmwFromHoleNumber</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">holeNumber</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a LabeledZmw object from the holeNumber&quot;&quot;&quot;</span>
+        <span class="n">part</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">choosePart</span><span class="p">(</span><span class="n">holeNumber</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">part</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">part</span><span class="o">.</span><span class="n">labeledZmwFromHoleNumber</span><span class="p">(</span><span class="n">holeNumber</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;holeNumber: </span><span class="si">%d</span><span class="s2"> not labeled&quot;</span> <span class="o">%</span> <span class="n">holeNumber</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MPBarcodeH5Reader.labeledZmwsFromBarcodeLabel"><a class="viewcode-back" href="../../../grandflow.io.html#grandflow.io.BarcodeH5Reader.MPBarcodeH5Reader.labeledZmwsFromBarcodeLabel">[docs]</a>    <span class="k">def</span> <span class="nf">labeledZmwsFromBarcodeLabel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bcLabel</span><span class="p">):</span>
+        <span class="n">lzmws</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">,</span>
+                      <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">z</span><span class="o">.</span><span class="n">labeledZmwsFromBarcodeLabel</span><span class="p">(</span><span class="n">bcLabel</span><span class="p">),</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">_parts</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">lzmws</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">z</span><span class="o">.</span><span class="n">holeNumber</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">reader</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parts</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">labeledZmw</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">labeledZmw</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span>
+            <span class="nb">issubclass</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">),</span> <span class="n">n</span><span class="o">.</span><span class="n">integer</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">labeledZmwFromHoleNumber</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">labeledZmwsFromBarcodeLabel</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">labeledZmwFromHoleNumber</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="o">*</span><span class="n">item</span><span class="o">.</span><span class="n">indices</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)))]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">n</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">entryType</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">entryType</span> <span class="o">==</span> <span class="nb">int</span> <span class="ow">or</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">entryType</span><span class="p">,</span> <span class="n">n</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">labeledZmwFromHoleNumber</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">item</span> <span class="p">]</span>
+                <span class="k">elif</span> <span class="n">entryType</span> <span class="o">==</span> <span class="nb">bool</span> <span class="ow">or</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">entryType</span><span class="p">,</span> <span class="n">n</span><span class="o">.</span><span class="n">bool_</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">labeledZmwFromHoleNumber</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">n</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="p">]</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Invalid type for BasH5Reader slicing&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BarcodeH5Fofn"><a class="viewcode-back" href="../../../grandflow.io.html#grandflow.io.BarcodeH5Reader.BarcodeH5Fofn">[docs]</a><span class="k">class</span> <span class="nc">BarcodeH5Fofn</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+
+        <span class="n">bcFilenames</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.fofn&quot;</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">readFofn</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+                    <span class="n">bcFilenames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">bcFilenames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bcH5s</span> <span class="o">=</span> <span class="p">[</span><span class="n">BarcodeH5Reader</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span> <span class="k">for</span> <span class="n">fname</span> <span class="ow">in</span>
+                       <span class="n">bcFilenames</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_byMovie</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">bc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bcH5s</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">bc</span><span class="o">.</span><span class="n">movieName</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_byMovie</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_byMovie</span><span class="p">[</span><span class="n">bc</span><span class="o">.</span><span class="n">movieName</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">bc</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_byMovie</span><span class="p">[</span><span class="n">bc</span><span class="o">.</span><span class="n">movieName</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bc</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">mpReaders</span> <span class="o">=</span> <span class="p">{</span> <span class="n">movieName</span><span class="p">:</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">MPBarcodeH5Reader</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span>
+                           <span class="k">for</span> <span class="n">movieName</span><span class="p">,</span> <span class="n">parts</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_byMovie</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()</span> <span class="p">}</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">holeNumbers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">([</span><span class="n">hn</span> <span class="k">for</span> <span class="n">reader</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bcH5s</span>
+                          <span class="k">for</span> <span class="n">hn</span> <span class="ow">in</span> <span class="n">reader</span><span class="o">.</span><span class="n">holeNumbers</span><span class="p">])</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">movieNames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpReaders</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">barcodeLabels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bcH5s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">barcodeLabels</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">scoreMode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;String specifying whether the barcodes were score symmetrically or in pairs&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bcH5s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">scoreMode</span>
+
+<div class="viewcode-block" id="BarcodeH5Fofn.labeledZmwsFromBarcodeLabel"><a class="viewcode-back" href="../../../grandflow.io.html#grandflow.io.BarcodeH5Reader.BarcodeH5Fofn.labeledZmwsFromBarcodeLabel">[docs]</a>    <span class="k">def</span> <span class="nf">labeledZmwsFromBarcodeLabel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="n">lzmws</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">,</span>
+                      <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">z</span><span class="o">.</span><span class="n">labeledZmwsFromBarcodeLabel</span><span class="p">(</span><span class="n">item</span><span class="p">),</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">_bcH5s</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">lzmws</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">z</span><span class="o">.</span><span class="n">holeNumber</span> <span class="p">)</span></div>
+
+<div class="viewcode-block" id="BarcodeH5Fofn.labeledZmwFromName"><a class="viewcode-back" href="../../../grandflow.io.html#grandflow.io.BarcodeH5Reader.BarcodeH5Fofn.labeledZmwFromName">[docs]</a>    <span class="k">def</span> <span class="nf">labeledZmwFromName</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Invalid slice of BarcodeH5Fofn&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">readerForMovie</span><span class="p">(</span><span class="n">indices</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">indices</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">barcodeLabels</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">labeledZmwsFromBarcodeLabel</span><span class="p">(</span><span class="n">indices</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">indexNum</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">indices</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid hole number or barcode name </span><span class="si">{0}</span><span class="s2"> as second index&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">indices</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="n">indexNum</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+<div class="viewcode-block" id="BarcodeH5Fofn.labeledZmwFromHoleNumber"><a class="viewcode-back" href="../../../grandflow.io.html#grandflow.io.BarcodeH5Reader.BarcodeH5Fofn.labeledZmwFromHoleNumber">[docs]</a>    <span class="k">def</span> <span class="nf">labeledZmwFromHoleNumber</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">movieNames</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot slice by holeNumber with multiple movies&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">movie</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">movieNames</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">reader</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpReaders</span><span class="p">[</span><span class="n">movie</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">reader</span><span class="p">[</span><span class="n">item</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="BarcodeH5Fofn.readerForMovie"><a class="viewcode-back" href="../../../grandflow.io.html#grandflow.io.BarcodeH5Reader.BarcodeH5Fofn.readerForMovie">[docs]</a>    <span class="k">def</span> <span class="nf">readerForMovie</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">movieName</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a BarcodeH5Reader for a movieName&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpReaders</span><span class="p">[</span><span class="n">movieName</span><span class="p">]</span></div>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">reader</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bcH5s</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">labeledZmw</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">labeledZmw</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a BarcodeH5Reader or LabeledZmw by movie name, zmw name, subread id,</span>
+<span class="sd">        or ccs id, using standard PacBio naming conventions.  Examples:</span>
+
+<span class="sd">          - [&quot;F3--R3&quot;]                        -&gt; List of LabeledZmws</span>
+<span class="sd">          - [&quot;m110818_..._s1_p0&quot;]             -&gt; BarcodeH5Reader</span>
+<span class="sd">          - [&quot;m110818_,,,_s1_p9/F3--R3&quot;]      -&gt; List of LabeledZmws</span>
+<span class="sd">          - [&quot;m110818_..._s1_p0/24480&quot;]       -&gt; LabeledZmw</span>
+<span class="sd">          - [&quot;m110818_..._s1_p0/24480/20_67&quot;] -&gt; LabeledZmw</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span>
+            <span class="nb">issubclass</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">),</span> <span class="n">n</span><span class="o">.</span><span class="n">integer</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">labeledZmwFromHoleNumber</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">barcodeLabels</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">labeledZmwsFromBarcodeLabel</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">movieNames</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">readerForMovie</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">labeledZmwFromName</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;BcH5Fofn slice must be a barcode, name or hole number&quot;</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, GrandOmics.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

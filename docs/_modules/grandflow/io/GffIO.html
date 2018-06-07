@@ -1,0 +1,383 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="cn">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>grandflow.io.GffIO &#8212; GrandFlow v0.0.1 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for grandflow.io.GffIO</h1><div class="highlight"><pre>
+<span></span><span class="c1">#coding = utf-8</span>
+
+<span class="c1"># Author: David Alexander</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">I/O support for GFF3 files.</span>
+
+<span class="sd">The specification for the GFF format is available at</span>
+<span class="sd">    http://www.sequenceontology.org/gff3.shtml</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;Gff3Record&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GffReader&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GffWriter&quot;</span> <span class="p">]</span>
+
+<span class="kn">from</span> <span class="nn">.base</span> <span class="k">import</span> <span class="n">ReaderBase</span><span class="p">,</span> <span class="n">WriterBase</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">OrderedDict</span><span class="p">,</span> <span class="n">defaultdict</span><span class="p">,</span> <span class="n">namedtuple</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">copy</span> <span class="k">as</span> <span class="n">shallow_copy</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+
+
+<div class="viewcode-block" id="Gff3Record"><a class="viewcode-back" href="../../../grandflow.io.html#grandflow.io.GffIO.Gff3Record">[docs]</a><span class="k">class</span> <span class="nc">Gff3Record</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for GFF record, providing uniform access to standard</span>
+<span class="sd">    GFF fields and attributes.</span>
+
+<span class="sd">    .. doctest::</span>
+
+<span class="sd">        &gt;&gt;&gt; from grandflow.io import Gff3Record</span>
+<span class="sd">        &gt;&gt;&gt; record = Gff3Record(&quot;chr1&quot;, 10, 11, &quot;insertion&quot;,</span>
+<span class="sd">        ...                     attributes=[(&quot;foo&quot;, &quot;1&quot;), (&quot;bar&quot;, &quot;2&quot;)])</span>
+<span class="sd">        &gt;&gt;&gt; record.start</span>
+<span class="sd">        10</span>
+<span class="sd">        &gt;&gt;&gt; record.foo</span>
+<span class="sd">        &#39;1&#39;</span>
+<span class="sd">        &gt;&gt;&gt; record.baz = 3</span>
+<span class="sd">        &gt;&gt;&gt; del record.baz</span>
+
+<span class="sd">    Attribute access using record.fieldName notation raises ``ValueError``</span>
+<span class="sd">    if an attribute named fieldName doesn&#39;t exist.  Use::</span>
+
+<span class="sd">        &gt;&gt;&gt; record.get(fieldName)</span>
+
+<span class="sd">    to fetch a field or attribute with None default or::</span>
+
+<span class="sd">        &gt;&gt;&gt; record.get(fieldName, defaultValue)</span>
+
+<span class="sd">    to fetch the field or attribute with a custom default.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_GFF_COLUMNS</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;seqid&quot;</span><span class="p">,</span> <span class="s2">&quot;source&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;start&quot;</span><span class="p">,</span> <span class="s2">&quot;end&quot;</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;strand&quot;</span><span class="p">,</span> <span class="s2">&quot;phase&quot;</span><span class="p">,</span> <span class="s2">&quot;attributes&quot;</span> <span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seqid</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span>
+                 <span class="n">score</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="n">strand</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="n">phase</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">,</span>
+                 <span class="n">source</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="n">attributes</span><span class="o">=</span><span class="p">()):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seqid</span>  <span class="o">=</span> <span class="n">seqid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="n">source</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">type</span>   <span class="o">=</span> <span class="nb">type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start</span>  <span class="o">=</span> <span class="n">start</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">end</span>    <span class="o">=</span> <span class="n">end</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">score</span>  <span class="o">=</span> <span class="n">score</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">strand</span> <span class="o">=</span> <span class="n">strand</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phase</span>  <span class="o">=</span> <span class="n">phase</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">(</span><span class="n">attributes</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Gff3Record.copy"><a class="viewcode-back" href="../../../grandflow.io.html#grandflow.io.GffIO.Gff3Record.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a shallow copy</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">shallow_copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Gff3Record.fromString"><a class="viewcode-back" href="../../../grandflow.io.html#grandflow.io.GffIO.Gff3Record.fromString">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">fromString</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parse a string as a GFF record.</span>
+<span class="sd">        Trailing whitespace is ignored.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">columns</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">columns</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_GFF_COLUMNS</span><span class="p">)</span>
+            <span class="n">attributes</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">tupleFromGffAttribute</span><span class="p">,</span> <span class="n">columns</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;;&quot;</span><span class="p">))</span>
+            <span class="p">(</span><span class="n">_seqid</span><span class="p">,</span> <span class="n">_source</span><span class="p">,</span> <span class="n">_type</span><span class="p">,</span> <span class="n">_start</span><span class="p">,</span>
+             <span class="n">_end</span><span class="p">,</span> <span class="n">_score</span><span class="p">,</span> <span class="n">_strand</span><span class="p">,</span> <span class="n">_phase</span><span class="p">)</span>  <span class="o">=</span> <span class="n">columns</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">Gff3Record</span><span class="p">(</span><span class="n">_seqid</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">_start</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">_end</span><span class="p">),</span> <span class="n">_type</span><span class="p">,</span>
+                              <span class="n">_score</span><span class="p">,</span> <span class="n">_strand</span><span class="p">,</span> <span class="n">_phase</span><span class="p">,</span> <span class="n">_source</span><span class="p">,</span> <span class="n">attributes</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">AssertionError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Could not interpret string as a Gff3Record: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">s</span><span class="p">)</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_formatField</span><span class="p">(</span><span class="n">field</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">field</span><span class="p">)</span> <span class="o">==</span> <span class="nb">float</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%.2f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">field</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">field</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">formattedAttributes</span> <span class="o">=</span> <span class="s2">&quot;;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">=</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_formatField</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+             <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()))</span>
+        <span class="n">formattedFixedColumns</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_formatField</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GFF_COLUMNS</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="se">\t</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">formattedFixedColumns</span><span class="p">,</span>
+                           <span class="n">formattedAttributes</span><span class="p">)</span>
+
+    <span class="c1">#</span>
+    <span class="c1"># Access to the attributes list using</span>
+    <span class="c1"># dot notation, providing a uniform</span>
+    <span class="c1"># interface.  Exception if attribute</span>
+    <span class="c1"># not found.</span>
+    <span class="c1">#</span>
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span>
+
+    <span class="k">def</span> <span class="nf">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GFF_COLUMNS</span><span class="p">:</span>
+            <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="k">def</span> <span class="nf">__delattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+
+    <span class="c1">#</span>
+    <span class="c1"># Access without exceptions.</span>
+    <span class="c1">#</span>
+<div class="viewcode-block" id="Gff3Record.get"><a class="viewcode-back" href="../../../grandflow.io.html#grandflow.io.GffIO.Gff3Record.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Gff3Record.put"><a class="viewcode-back" href="../../../grandflow.io.html#grandflow.io.GffIO.Gff3Record.put">[docs]</a>    <span class="k">def</span> <span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__cmp__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">cmp</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">seqid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">),</span> <span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">seqid</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">start</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="GffReader"><a class="viewcode-back" href="../../../grandflow.io.html#grandflow.io.GffIO.GffReader">[docs]</a><span class="k">class</span> <span class="nc">GffReader</span><span class="p">(</span><span class="n">ReaderBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A GFF file reader class</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_readHeaders</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">firstLine</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">file</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;##&quot;</span><span class="p">):</span>
+                <span class="n">headers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">())</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">firstLine</span> <span class="o">=</span> <span class="n">line</span>
+                <span class="k">break</span>
+        <span class="k">return</span> <span class="n">headers</span><span class="p">,</span> <span class="n">firstLine</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">GffReader</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">firstLine</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_readHeaders</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">firstLine</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">Gff3Record</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">firstLine</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">firstLine</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">file</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">Gff3Record</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">line</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="GffWriter"><a class="viewcode-back" href="../../../grandflow.io.html#grandflow.io.GffIO.GffWriter">[docs]</a><span class="k">class</span> <span class="nc">GffWriter</span><span class="p">(</span><span class="n">WriterBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A GFF file writer class</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">GffWriter</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">writeHeader</span><span class="p">(</span><span class="s2">&quot;##gff-version 3&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="GffWriter.writeHeader"><a class="viewcode-back" href="../../../grandflow.io.html#grandflow.io.GffIO.GffWriter.writeHeader">[docs]</a>    <span class="k">def</span> <span class="nf">writeHeader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">headerLine</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">headerLine</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;##&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;GFF headers must start with ##&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">headerLine</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()))</span></div>
+
+<div class="viewcode-block" id="GffWriter.writeRecord"><a class="viewcode-back" href="../../../grandflow.io.html#grandflow.io.GffIO.GffWriter.writeRecord">[docs]</a>    <span class="k">def</span> <span class="nf">writeRecord</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">Gff3Record</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">record</span><span class="p">)))</span></div></div>
+
+<span class="c1">#</span>
+<span class="c1"># Utility functions</span>
+<span class="c1">#</span>
+
+<span class="k">def</span> <span class="nf">floatValue</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+<span class="k">def</span> <span class="nf">integerValue</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+<span class="k">def</span> <span class="nf">grok</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="n">iv</span> <span class="o">=</span> <span class="n">integerValue</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">iv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="k">return</span> <span class="n">iv</span>
+    <span class="n">fv</span> <span class="o">=</span> <span class="n">floatValue</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">fv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="k">return</span> <span class="n">fv</span>
+    <span class="k">return</span> <span class="n">s</span>
+
+<span class="k">def</span> <span class="nf">tupleFromGffAttribute</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">k</span><span class="p">,</span> <span class="n">grok</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">sort_gff</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">output_file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sort a single GFF file by genomic location (seqid, start).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">output_file_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">output_file_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">file_name</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;_sorted.gff&quot;</span>
+    <span class="k">with</span> <span class="n">GffReader</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">records</span> <span class="o">=</span> <span class="p">[</span> <span class="n">rec</span> <span class="k">for</span> <span class="n">rec</span> <span class="ow">in</span> <span class="n">f</span> <span class="p">]</span>
+        <span class="n">records</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_file_name</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out</span><span class="p">:</span>
+            <span class="n">gff_out</span> <span class="o">=</span> <span class="n">GffWriter</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+            <span class="nb">map</span><span class="p">(</span><span class="n">gff_out</span><span class="o">.</span><span class="n">writeHeader</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">headers</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">rec</span> <span class="ow">in</span> <span class="n">records</span><span class="p">:</span>
+                <span class="n">gff_out</span><span class="o">.</span><span class="n">writeRecord</span><span class="p">(</span><span class="n">rec</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">output_file_name</span>
+
+
+<span class="k">def</span> <span class="nf">merge_gffs</span> <span class="p">(</span><span class="n">gff_files</span><span class="p">,</span> <span class="n">output_file</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Merge a sequence of GFF files, preserving unique headers (except for the</span>
+<span class="sd">    source commandline, which will usually vary).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">headers</span><span class="p">,</span> <span class="n">header_keys</span> <span class="o">=</span> <span class="n">_merge_gff_headers</span><span class="p">(</span><span class="n">gff_files</span><span class="p">)</span>
+    <span class="n">n_rec</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">with</span> <span class="n">GffWriter</span><span class="p">(</span><span class="n">output_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">header_keys</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">headers</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
+                <span class="n">writer</span><span class="o">.</span><span class="n">writeHeader</span><span class="p">(</span><span class="s2">&quot;##</span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">gff_file</span> <span class="ow">in</span> <span class="n">gff_files</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">GffReader</span><span class="p">(</span><span class="n">gff_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">rec</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+                    <span class="n">writer</span><span class="o">.</span><span class="n">writeRecord</span><span class="p">(</span><span class="n">rec</span><span class="p">)</span>
+                    <span class="n">n_rec</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">n_rec</span>
+
+
+<span class="k">def</span> <span class="nf">_merge_gff_headers</span><span class="p">(</span><span class="n">gff_files</span><span class="p">):</span>
+    <span class="n">ignore_fields</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s2">&quot;source-commandline&quot;</span><span class="p">,</span> <span class="s2">&quot;gff-version&quot;</span><span class="p">,</span> <span class="s2">&quot;date&quot;</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">_get_headers</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">GffReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">reader</span><span class="o">.</span><span class="n">headers</span><span class="p">:</span>
+                <span class="n">fields</span> <span class="o">=</span> <span class="n">h</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">fields</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">ignore_fields</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="n">fields</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">fields</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+    <span class="n">header_keys</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">_get_headers</span><span class="p">(</span><span class="n">gff_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">header_keys</span><span class="p">:</span>
+            <span class="n">header_keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+    <span class="n">headers</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">gff_file</span> <span class="ow">in</span> <span class="n">gff_files</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">_get_headers</span><span class="p">(</span><span class="n">gff_file</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">headers</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
+                <span class="n">headers</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">headers</span><span class="p">,</span> <span class="n">header_keys</span>
+
+
+<span class="n">GffHead</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;GffHead&quot;</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;file_name&quot;</span><span class="p">,</span> <span class="s2">&quot;record&quot;</span><span class="p">,</span> <span class="s2">&quot;headers&quot;</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">merge_gffs_sorted</span><span class="p">(</span><span class="n">gff_files</span><span class="p">,</span> <span class="n">output_file_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Utility function to combine a set of N (&gt;= 2) GFF files, with records</span>
+<span class="sd">    ordered by genomic location.  This assumes that each input file is already</span>
+<span class="sd">    sorted, and forms a contiguous set of records.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># collect the very first record of each GFF and use that to sort the files</span>
+    <span class="n">first_records</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">empty_files</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">gff_files</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">GffReader</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">rec</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">first_records</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">GffHead</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">rec</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">headers</span><span class="p">))</span>
+                <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">empty_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+    <span class="n">first_records</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="k">lambda</span> <span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">:</span> <span class="nb">cmp</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">record</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">record</span><span class="p">))</span>
+    <span class="n">gff_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">file_name</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">first_records</span><span class="p">]</span>
+    <span class="n">gff_files</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">empty_files</span><span class="p">)</span>
+    <span class="n">headers</span><span class="p">,</span> <span class="n">header_keys</span> <span class="o">=</span> <span class="n">_merge_gff_headers</span><span class="p">(</span><span class="n">gff_files</span><span class="p">)</span>
+    <span class="n">nrec</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">with</span> <span class="n">GffWriter</span><span class="p">(</span><span class="n">output_file_name</span><span class="p">)</span> <span class="k">as</span> <span class="n">out</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">header_keys</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">headers</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">writeHeader</span><span class="p">(</span><span class="s2">&quot;##</span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">gff_files</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Merging </span><span class="si">{f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f</span><span class="o">=</span><span class="n">file_name</span><span class="p">))</span>
+            <span class="k">with</span> <span class="n">GffReader</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span> <span class="k">as</span> <span class="n">gff</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">rec</span> <span class="ow">in</span> <span class="n">gff</span><span class="p">:</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">writeRecord</span><span class="p">(</span><span class="n">rec</span><span class="p">)</span>
+                    <span class="n">nrec</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">nrec</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, GrandOmics.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

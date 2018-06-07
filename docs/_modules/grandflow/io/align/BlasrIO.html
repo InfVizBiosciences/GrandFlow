@@ -1,0 +1,168 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="cn">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>grandflow.io.align.BlasrIO &#8212; GrandFlow v0.0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for grandflow.io.align.BlasrIO</h1><div class="highlight"><pre>
+<span></span><span class="c1">#coding = utf-8</span>
+
+<span class="c1"># Author: David Alexander</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span>
+
+<span class="kn">from</span> <span class="nn">grandflow.io.base</span> <span class="k">import</span> <span class="n">ReaderBase</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;M4Record&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;M4Reader&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;M5Record&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;M5Reader&quot;</span> <span class="p">]</span>
+
+<span class="k">class</span> <span class="nc">MalformattedRecord</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span> <span class="k">pass</span>
+
+<div class="viewcode-block" id="M4Record"><a class="viewcode-back" href="../../../../grandflow.io.align.html#grandflow.io.align.BlasrIO.M4Record">[docs]</a><span class="k">class</span> <span class="nc">M4Record</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Record for alignment summary record output from BLASR -m 4 option</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="M4Record.fromString"><a class="viewcode-back" href="../../../../grandflow.io.align.html#grandflow.io.align.BlasrIO.M4Record.fromString">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">fromString</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">columns</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">qName</span>             <span class="o">=</span> <span class="n">columns</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">tName</span>             <span class="o">=</span> <span class="n">columns</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">score</span>             <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">percentSimilarity</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">qStrand</span>           <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">qStart</span>            <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">qEnd</span>              <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="mi">6</span><span class="p">])</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">qLength</span>           <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="mi">7</span><span class="p">])</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">tStrand</span>           <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="mi">8</span><span class="p">])</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">tStart</span>            <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="mi">9</span><span class="p">])</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">tEnd</span>              <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="mi">10</span><span class="p">])</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">tLength</span>           <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="mi">11</span><span class="p">])</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">mapQV</span>             <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="mi">12</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">obj</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">MalformattedRecord</span><span class="p">(</span><span class="n">s</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="M4Reader"><a class="viewcode-back" href="../../../../grandflow.io.align.html#grandflow.io.align.BlasrIO.M4Reader">[docs]</a><span class="k">class</span> <span class="nc">M4Reader</span><span class="p">(</span><span class="n">ReaderBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reader for -m 4 formatted alignment summary information from BLASR</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">file</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">M4Record</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">line</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="M5Record"><a class="viewcode-back" href="../../../../grandflow.io.align.html#grandflow.io.align.BlasrIO.M5Record">[docs]</a><span class="k">class</span> <span class="nc">M5Record</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Record for alignment summary record output from BLASR -m 5 option</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="M5Record.fromString"><a class="viewcode-back" href="../../../../grandflow.io.align.html#grandflow.io.align.BlasrIO.M5Record.fromString">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">fromString</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">columns</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">qName</span>        <span class="o">=</span> <span class="n">columns</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">qLength</span>      <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">qStart</span>       <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">qEnd</span>         <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">qStrand</span>      <span class="o">=</span> <span class="n">columns</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">tName</span>        <span class="o">=</span> <span class="n">columns</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">tLength</span>      <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="mi">6</span><span class="p">])</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">tStart</span>       <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="mi">7</span><span class="p">])</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">tEnd</span>         <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="mi">8</span><span class="p">])</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">tStrand</span>      <span class="o">=</span> <span class="n">columns</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">score</span>        <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="mi">10</span><span class="p">])</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">numMatch</span>     <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="mi">11</span><span class="p">])</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">numMismatch</span>  <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="mi">12</span><span class="p">])</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">numIns</span>       <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="mi">13</span><span class="p">])</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">numDel</span>       <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="mi">14</span><span class="p">])</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">mapQV</span>        <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="mi">15</span><span class="p">])</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">qAlignedSeq</span>  <span class="o">=</span> <span class="n">columns</span><span class="p">[</span><span class="mi">16</span><span class="p">]</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">matchPattern</span> <span class="o">=</span> <span class="n">columns</span><span class="p">[</span><span class="mi">17</span><span class="p">]</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">tAlignedSeq</span>  <span class="o">=</span> <span class="n">columns</span><span class="p">[</span><span class="mi">18</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">obj</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">MalformattedRecord</span><span class="p">(</span><span class="n">s</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="M5Reader"><a class="viewcode-back" href="../../../../grandflow.io.align.html#grandflow.io.align.BlasrIO.M5Reader">[docs]</a><span class="k">class</span> <span class="nc">M5Reader</span><span class="p">(</span><span class="n">ReaderBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reader for -m 5 formatted alignment summary information from BLASR</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">file</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">M5Record</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">line</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, GrandOmics.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,397 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="cn">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>grandflow.stat.length_plot &#8212; GrandFlow v0.0.1 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for grandflow.stat.length_plot</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">To statistics on a list of fasta/fastq files</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="k">import</span> <span class="n">Pool</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">grandflow.io</span> <span class="k">import</span> <span class="n">FastaReader</span><span class="p">,</span> <span class="n">FastqReader</span>
+<span class="kn">from</span> <span class="nn">grandflow.plot.plot</span> <span class="k">import</span> <span class="n">length_plots</span>
+
+
+<div class="viewcode-block" id="ReadStat"><a class="viewcode-back" href="../../../grandflow.stat.html#grandflow.stat.length_plot.ReadStat">[docs]</a><span class="k">class</span> <span class="nc">ReadStat</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Statistic the reads length, GC content &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">proj_name</span><span class="p">,</span> <span class="n">file_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_len</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;init</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            file_list (list): the list including the fastq/fasta file path</span>
+<span class="sd">            min_len (int): to statistic the reads which length more than min_len</span>
+
+<span class="sd">        Returns: TODO</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_proj_name</span> <span class="o">=</span> <span class="n">proj_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_file_list</span> <span class="o">=</span> <span class="n">file_list</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_min_len</span> <span class="o">=</span> <span class="n">min_len</span>
+
+<div class="viewcode-block" id="ReadStat.get_length"><a class="viewcode-back" href="../../../grandflow.stat.html#grandflow.stat.length_plot.ReadStat.get_length">[docs]</a>    <span class="k">def</span> <span class="nf">get_length</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">min_len</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        get the length of record</span>
+<span class="sd">        :param filename:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[</span><span class="si">%s</span><span class="s2">] process </span><span class="si">%r</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">filename</span><span class="p">))</span>
+
+        <span class="n">fmt</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.gz&quot;</span><span class="p">):</span>
+            <span class="n">fmt</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">2</span><span class="p">:])</span>
+
+        <span class="k">if</span> <span class="n">fmt</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;fastq&quot;</span><span class="p">,</span> <span class="s2">&quot;fq&quot;</span><span class="p">,</span> <span class="s2">&quot;fastq.gz&quot;</span><span class="p">,</span> <span class="s2">&quot;fq.gz&quot;</span><span class="p">]:</span>
+            <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">FastqReader</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+
+                <span class="k">if</span> <span class="n">record</span><span class="o">.</span><span class="n">length</span> <span class="o">&gt;=</span> <span class="n">min_len</span><span class="p">:</span>
+                    <span class="n">r</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">length</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">fmt</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;fasta&quot;</span><span class="p">,</span> <span class="s2">&quot;fa&quot;</span><span class="p">,</span> <span class="s2">&quot;fasta.gz&quot;</span><span class="p">,</span> <span class="s2">&quot;fa.gz&quot;</span><span class="p">]:</span>
+            <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">FastaReader</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+
+                <span class="k">if</span> <span class="n">record</span><span class="o">.</span><span class="n">length</span> <span class="o">&gt;=</span> <span class="n">min_len</span><span class="p">:</span>
+                    <span class="n">r</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">length</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[</span><span class="si">%s</span><span class="s2">] </span><span class="si">%r</span><span class="s2"> is not a valid seq format!&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">filename</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">r</span></div>
+
+<div class="viewcode-block" id="ReadStat.N"><a class="viewcode-back" href="../../../grandflow.stat.html#grandflow.stat.length_plot.ReadStat.N">[docs]</a>    <span class="k">def</span> <span class="nf">N</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number</span><span class="p">,</span> <span class="n">lengths</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        calculate the N{number}return N{number} information of lengths</span>
+<span class="sd">        :param number: 0-100</span>
+<span class="sd">        :param lengths: a list of length</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">lengths</span>
+
+        <span class="n">sum_length</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">lengths</span><span class="p">)</span>
+        <span class="n">accu_len</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">accu_num</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">lengths</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="n">accu_len</span> <span class="o">+=</span> <span class="n">i</span>
+            <span class="n">accu_num</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="k">if</span> <span class="n">accu_len</span> <span class="o">&gt;=</span> <span class="n">sum_length</span> <span class="o">*</span> <span class="n">number</span> <span class="o">/</span> <span class="mi">100</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">i</span><span class="p">,</span> <span class="n">accu_num</span><span class="p">,</span> <span class="n">accu_len</span>
+
+        <span class="k">return</span> <span class="n">i</span><span class="p">,</span> <span class="n">accu_num</span><span class="p">,</span> <span class="n">accu_len</span></div>
+
+<div class="viewcode-block" id="ReadStat.over"><a class="viewcode-back" href="../../../grandflow.stat.html#grandflow.stat.length_plot.ReadStat.over">[docs]</a>    <span class="k">def</span> <span class="nf">over</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number</span><span class="p">,</span> <span class="n">lengths</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        return length in lengths over {number}</span>
+<span class="sd">        :param number:</span>
+<span class="sd">        :param lengths:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">lengths</span>
+        <span class="n">accu_len</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">accu_num</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">lengths</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">number</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">i</span><span class="p">,</span> <span class="n">accu_num</span><span class="p">,</span> <span class="n">accu_len</span>
+
+            <span class="n">accu_len</span> <span class="o">+=</span> <span class="n">i</span>
+            <span class="n">accu_num</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">i</span><span class="p">,</span> <span class="n">accu_num</span><span class="p">,</span> <span class="n">accu_len</span></div>
+
+<div class="viewcode-block" id="ReadStat.get_total_length"><a class="viewcode-back" href="../../../grandflow.stat.html#grandflow.stat.length_plot.ReadStat.get_total_length">[docs]</a>    <span class="k">def</span> <span class="nf">get_total_length</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;TODO: Docstring for get_total_length.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            arg1 (TODO): TODO</span>
+
+<span class="sd">        Returns: TODO</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="ReadStat.seq_stat"><a class="viewcode-back" href="../../../grandflow.stat.html#grandflow.stat.length_plot.ReadStat.seq_stat">[docs]</a>    <span class="k">def</span> <span class="nf">seq_stat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">filenames</span><span class="p">,</span>
+                 <span class="n">ngs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">fofn</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">thread</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">min_len</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        statistics on fastq files</span>
+<span class="sd">        :param filenames:</span>
+<span class="sd">        :param fofn: a file contain fastq file list</span>
+<span class="sd">        :param thread: thread process to read fastq files</span>
+<span class="sd">        :param min_len:</span>
+<span class="sd">        :return:</span>
+<span class="sd">            reads_stat_dict={</span>
+<span class="sd">                &#39;file_num&#39;: file_num,</span>
+<span class="sd">                &#39;reads_num&#39;: reads_number,</span>
+<span class="sd">                &#39;total_length&#39;: total_length,</span>
+<span class="sd">                &#39;average_length&#39;: average_length,</span>
+<span class="sd">                &#39;longest_length&#39;: longest</span>
+<span class="sd">            }</span>
+
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">reads_stat_dict</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="n">reads_dis_dict</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="c1"># 1. get the lengths of each fastA/Q file</span>
+        <span class="k">if</span> <span class="n">fofn</span><span class="p">:</span>
+            <span class="n">file_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">filenames</span><span class="p">:</span>
+                <span class="n">file_list</span> <span class="o">+=</span> <span class="n">fofn2list</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">file_list</span> <span class="o">=</span> <span class="n">filenames</span>
+
+        <span class="n">pool</span> <span class="o">=</span> <span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="n">thread</span><span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">file_list</span><span class="p">)):</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">file_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">file_list</span><span class="p">))</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">pool</span><span class="o">.</span><span class="n">apply_async</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_length</span><span class="p">,</span> <span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">min_len</span><span class="p">)))</span>
+
+        <span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+
+        <span class="n">lengths</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">results</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">] getting results of </span><span class="si">%r</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">),</span>
+                                                     <span class="n">file_list</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+            <span class="n">lengths</span> <span class="o">+=</span> <span class="n">r</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+
+        <span class="n">raw_length</span> <span class="o">=</span> <span class="n">lengths</span>
+        <span class="c1"># write lengths out</span>
+        <span class="n">lengths</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">lengths</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># 2. get the common statistics</span>
+        <span class="n">total_length</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">lengths</span><span class="p">)</span>
+        <span class="n">reads_number</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">lengths</span><span class="p">)</span>
+        <span class="n">file_num</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">file_list</span><span class="p">)</span>
+        <span class="n">average_length</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">total_length</span> <span class="o">/</span> <span class="n">reads_number</span><span class="p">)</span>
+        <span class="n">longest</span> <span class="o">=</span> <span class="n">lengths</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># reads_number = reads_number</span>
+
+        <span class="n">reads_stat_dict</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;length_sort&#39;</span><span class="p">:</span> <span class="n">lengths</span><span class="p">,</span>
+            <span class="s1">&#39;file_num&#39;</span><span class="p">:</span> <span class="n">file_num</span><span class="p">,</span>
+            <span class="s1">&#39;reads_num&#39;</span><span class="p">:</span> <span class="n">reads_number</span><span class="p">,</span>
+            <span class="s1">&#39;total_length&#39;</span><span class="p">:</span> <span class="n">total_length</span><span class="p">,</span>
+            <span class="s1">&#39;average_length&#39;</span><span class="p">:</span> <span class="n">average_length</span><span class="p">,</span>
+            <span class="s1">&#39;longest_length&#39;</span><span class="p">:</span> <span class="n">longest</span>
+        <span class="p">}</span>
+
+        <span class="c1"># stdout</span>
+        <span class="n">file_num</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0:,}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">file_list</span><span class="p">))</span>
+        <span class="n">average_length</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0:,}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">total_length</span> <span class="o">/</span> <span class="n">reads_number</span><span class="p">))</span>
+        <span class="n">longest</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0:,}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">lengths</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">_total_length</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0:,}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">total_length</span><span class="p">)</span>
+        <span class="n">reads_number</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0:,}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">reads_number</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    Statistics for all FastA/Q records</span>
+
+<span class="s2">    file number:   </span><span class="se">\t</span><span class="si">{file_num}</span><span class="s2"></span>
+<span class="s2">    record number: </span><span class="se">\t</span><span class="si">{reads_number}</span><span class="s2"></span>
+<span class="s2">    sum of length: </span><span class="se">\t</span><span class="si">{_total_length}</span><span class="s2"></span>
+<span class="s2">    average length:</span><span class="se">\t</span><span class="si">{average_length}</span><span class="s2"></span>
+<span class="s2">    longest length:</span><span class="se">\t</span><span class="si">{longest}</span><span class="s2"></span>
+<span class="s2">    &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="nb">locals</span><span class="p">()))</span>
+
+        <span class="c1"># 2. get the N10-N90 statstics</span>
+        <span class="c1"># length: the N{i} value; number: number of reads which length &gt;= N{i}</span>
+        <span class="c1"># if the input file is ngs short reads, skip the following steps.</span>
+        <span class="k">if</span> <span class="n">ngs</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">1</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Distribution of record length&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%5s</span><span class="se">\t</span><span class="si">%15s</span><span class="se">\t</span><span class="si">%15s</span><span class="se">\t</span><span class="si">%10s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="s2">&quot;Type&quot;</span><span class="p">,</span> <span class="s2">&quot;Bases&quot;</span><span class="p">,</span> <span class="s2">&quot;Count&quot;</span><span class="p">,</span> <span class="s2">&quot;%Bases&quot;</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">70</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">90</span><span class="p">]:</span>
+            <span class="n">read_length</span><span class="p">,</span> <span class="n">read_number</span><span class="p">,</span> <span class="n">read_length_sum</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">lengths</span><span class="p">)</span>
+            <span class="c1"># reads_dis_dict[&quot;N%s&quot; % i] =</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%5s</span><span class="se">\t</span><span class="si">%15s</span><span class="se">\t</span><span class="si">%15s</span><span class="se">\t</span><span class="si">%10.2f</span><span class="s2">&quot;</span> <span class="o">%</span>
+                  <span class="p">(</span><span class="s2">&quot;N</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{0:,}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">read_length</span><span class="p">),</span>
+                   <span class="s2">&quot;</span><span class="si">{0:,}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">read_number</span><span class="p">),</span>
+                   <span class="mf">100.0</span> <span class="o">*</span> <span class="n">read_length_sum</span> <span class="o">/</span> <span class="n">total_length</span><span class="p">))</span>
+
+        <span class="c1"># length: the sum of record length which length &gt;= i; number: the number of record which length &gt;= i</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">70</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">90</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">1000</span>
+        <span class="p">]:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">read_number</span><span class="p">,</span> <span class="n">read_length_sum</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">i</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">,</span> <span class="n">lengths</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%5s</span><span class="se">\t</span><span class="si">%15s</span><span class="se">\t</span><span class="si">%15s</span><span class="se">\t</span><span class="si">%10.2f</span><span class="s2">&quot;</span> <span class="o">%</span>
+                  <span class="p">(</span><span class="s2">&quot;&gt;</span><span class="si">%s</span><span class="s2">kb&quot;</span> <span class="o">%</span> <span class="n">i</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{0:,}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">read_length_sum</span><span class="p">),</span>
+                   <span class="s2">&quot;</span><span class="si">{0:,}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">read_number</span><span class="p">),</span>
+                   <span class="mf">100.0</span> <span class="o">*</span> <span class="n">read_length_sum</span> <span class="o">/</span> <span class="n">total_length</span><span class="p">))</span>
+        <span class="n">N50</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="n">lengths</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">length_plots</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">lengths</span><span class="p">),</span>
+            <span class="s1">&#39;length&#39;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_proj_name</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span><span class="p">,</span>
+            <span class="n">n50</span><span class="o">=</span><span class="n">N50</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Histogram of read lengths(</span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_proj_name</span><span class="p">)</span>
+        <span class="c1"># write out record length for plot</span>
+        <span class="c1"># with open(&quot;record.len&quot;, &quot;w&quot;) as fh:</span>
+            <span class="c1"># fh.write(&quot;\n&quot;.join(map(str, lengths)))</span>
+
+        <span class="k">return</span> <span class="n">reads_stat_dict</span></div></div>
+
+
+<div class="viewcode-block" id="fofn2list"><a class="viewcode-back" href="../../../grandflow.stat.html#grandflow.stat.length_plot.fofn2list">[docs]</a><span class="k">def</span> <span class="nf">fofn2list</span><span class="p">(</span><span class="n">fofn</span><span class="p">):</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fofn</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">fh</span><span class="o">.</span><span class="n">readlines</span><span class="p">():</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">line</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">):</span>
+                <span class="k">continue</span>
+
+            <span class="n">r</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">r</span></div>
+
+
+<div class="viewcode-block" id="get_args"><a class="viewcode-back" href="../../../grandflow.stat.html#grandflow.stat.length_plot.get_args">[docs]</a><span class="k">def</span> <span class="nf">get_args</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    get args</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span>
+        <span class="n">formatter_class</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">RawDescriptionHelpFormatter</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">description:</span>
+<span class="s2">    Statistics on FastA/Q files</span>
+<span class="s2">    file number</span>
+<span class="s2">    record number</span>
+<span class="s2">    sum of length</span>
+<span class="s2">    average length</span>
+<span class="s2">    longest length</span>
+<span class="s2">    N50-N90</span>
+<span class="s2">         &quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">args</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;input&quot;</span><span class="p">,</span>
+        <span class="n">metavar</span><span class="o">=</span><span class="s1">&#39;FILEs&#39;</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;file paths, &#39;*&#39; is accepted&quot;</span><span class="p">)</span>
+
+    <span class="n">args</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--proj_name&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;project name &quot;</span><span class="p">)</span>
+
+    <span class="n">args</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;-f&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--fofn&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;input file contains file paths&quot;</span><span class="p">)</span>
+    <span class="n">args</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--min_len&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">metavar</span><span class="o">=</span><span class="s2">&quot;INT&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;min length to statistics&quot;</span><span class="p">)</span>
+    <span class="n">args</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;-t&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--thread&quot;</span><span class="p">,</span>
+        <span class="n">metavar</span><span class="o">=</span><span class="s1">&#39;INT&#39;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;number of thread process&quot;</span><span class="p">)</span>
+    <span class="n">args</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;-ngs&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;input fastq reads is short reads from ngs&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">args</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../grandflow.stat.html#grandflow.stat.length_plot.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">get_args</span><span class="p">()</span>
+    <span class="n">rs</span> <span class="o">=</span> <span class="n">ReadStat</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">proj_name</span><span class="p">)</span>
+    <span class="n">rs</span><span class="o">.</span><span class="n">seq_stat</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">input</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">ngs</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">fofn</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">thread</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">min_len</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, GrandOmics.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

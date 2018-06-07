@@ -1,0 +1,93 @@
+grandflow.io.dataset package
+============================
+
+Subpackages
+-----------
+
+.. toctree::
+
+    grandflow.io.dataset.pyxb
+
+Submodules
+----------
+
+grandflow.io.dataset.DataSetErrors module
+-----------------------------------------
+
+.. automodule:: grandflow.io.dataset.DataSetErrors
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+grandflow.io.dataset.DataSetIO module
+-------------------------------------
+
+.. automodule:: grandflow.io.dataset.DataSetIO
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+grandflow.io.dataset.DataSetMembers module
+------------------------------------------
+
+.. automodule:: grandflow.io.dataset.DataSetMembers
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+grandflow.io.dataset.DataSetMetaTypes module
+--------------------------------------------
+
+.. automodule:: grandflow.io.dataset.DataSetMetaTypes
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+grandflow.io.dataset.DataSetReader module
+-----------------------------------------
+
+.. automodule:: grandflow.io.dataset.DataSetReader
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+grandflow.io.dataset.DataSetUtils module
+----------------------------------------
+
+.. automodule:: grandflow.io.dataset.DataSetUtils
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+grandflow.io.dataset.DataSetValidator module
+--------------------------------------------
+
+.. automodule:: grandflow.io.dataset.DataSetValidator
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+grandflow.io.dataset.DataSetWriter module
+-----------------------------------------
+
+.. automodule:: grandflow.io.dataset.DataSetWriter
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+grandflow.io.dataset.utils module
+---------------------------------
+
+.. automodule:: grandflow.io.dataset.utils
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: grandflow.io.dataset
+    :members:
+    :undoc-members:
+    :show-inheritance:

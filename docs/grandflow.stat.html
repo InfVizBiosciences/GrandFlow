@@ -1,1 +1,372 @@
-../.docs/build/html/grandflow.stat.html
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="cn">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>grandflow.stat package &#8212; GrandFlow v0.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="grandflow-stat-package">
+<h1>grandflow.stat package<a class="headerlink" href="#grandflow-stat-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-grandflow.stat.ReadStat">
+<span id="grandflow-stat-readstat-module"></span><h2>grandflow.stat.ReadStat module<a class="headerlink" href="#module-grandflow.stat.ReadStat" title="Permalink to this headline">¶</a></h2>
+<p>To statistics on a list of fasta/fastq files</p>
+<dl class="class">
+<dt id="grandflow.stat.ReadStat.ReadStat">
+<em class="property">class </em><code class="descclassname">grandflow.stat.ReadStat.</code><code class="descname">ReadStat</code><span class="sig-paren">(</span><em>proj_name</em>, <em>fqs</em>, <em>fofn</em>, <em>min_len=0</em>, <em>thread=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/stat/ReadStat.html#ReadStat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.stat.ReadStat.ReadStat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Statistic the reads length, GC content</p>
+<dl class="method">
+<dt id="grandflow.stat.ReadStat.ReadStat.N">
+<code class="descname">N</code><span class="sig-paren">(</span><em>number</em>, <em>lengths</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/stat/ReadStat.html#ReadStat.N"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.stat.ReadStat.ReadStat.N" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculate the N{number}return N{number} information of lengths
+:param number: 0-100
+:param lengths: a list of length
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="grandflow.stat.ReadStat.ReadStat.get_length">
+<code class="descname">get_length</code><span class="sig-paren">(</span><em>filename</em>, <em>index</em>, <em>min_len</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/stat/ReadStat.html#ReadStat.get_length"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.stat.ReadStat.ReadStat.get_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the length of record
+:param filename:
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="grandflow.stat.ReadStat.ReadStat.get_total_length">
+<code class="descname">get_total_length</code><span class="sig-paren">(</span><em>arg1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/stat/ReadStat.html#ReadStat.get_total_length"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.stat.ReadStat.ReadStat.get_total_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>TODO: Docstring for get_total_length.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>arg1 (TODO): TODO</dd>
+</dl>
+<p>Returns: TODO</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="grandflow.stat.ReadStat.ReadStat.length_distribute">
+<code class="descname">length_distribute</code><span class="sig-paren">(</span><em>lengths</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/stat/ReadStat.html#ReadStat.length_distribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.stat.ReadStat.ReadStat.length_distribute" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="grandflow.stat.ReadStat.ReadStat.length_stat">
+<code class="descname">length_stat</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/stat/ReadStat.html#ReadStat.length_stat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.stat.ReadStat.ReadStat.length_stat" title="Permalink to this definition">¶</a></dt>
+<dd><p>statistics on fastq files
+:param filenames:
+:param fofn: a file contain fastq file list
+:param thread: thread process to read fastq files
+:param min_len:
+:return:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>reads_stat_dict={</dt>
+<dd>'file_num': file_num,
+'reads_num': reads_number,
+'total_length': total_length,
+'average_length': average_length,
+'longest_length': longest</dd>
+</dl>
+<p>}</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="grandflow.stat.ReadStat.ReadStat.over">
+<code class="descname">over</code><span class="sig-paren">(</span><em>number</em>, <em>lengths</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/stat/ReadStat.html#ReadStat.over"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.stat.ReadStat.ReadStat.over" title="Permalink to this definition">¶</a></dt>
+<dd><p>return length in lengths over {number}
+:param number:
+:param lengths:
+:return:</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.stat.ReadStat.fofn2list">
+<code class="descclassname">grandflow.stat.ReadStat.</code><code class="descname">fofn2list</code><span class="sig-paren">(</span><em>fofn</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/stat/ReadStat.html#fofn2list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.stat.ReadStat.fofn2list" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="grandflow.stat.ReadStat.get_args">
+<code class="descclassname">grandflow.stat.ReadStat.</code><code class="descname">get_args</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/stat/ReadStat.html#get_args"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.stat.ReadStat.get_args" title="Permalink to this definition">¶</a></dt>
+<dd><p>get args
+:return:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.stat.ReadStat.main">
+<code class="descclassname">grandflow.stat.ReadStat.</code><code class="descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/stat/ReadStat.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.stat.ReadStat.main" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-grandflow.stat.length_plot">
+<span id="grandflow-stat-length-plot-module"></span><h2>grandflow.stat.length_plot module<a class="headerlink" href="#module-grandflow.stat.length_plot" title="Permalink to this headline">¶</a></h2>
+<p>To statistics on a list of fasta/fastq files</p>
+<dl class="class">
+<dt id="grandflow.stat.length_plot.ReadStat">
+<em class="property">class </em><code class="descclassname">grandflow.stat.length_plot.</code><code class="descname">ReadStat</code><span class="sig-paren">(</span><em>proj_name</em>, <em>file_list=None</em>, <em>min_len=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/stat/length_plot.html#ReadStat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.stat.length_plot.ReadStat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Statistic the reads length, GC content</p>
+<dl class="method">
+<dt id="grandflow.stat.length_plot.ReadStat.N">
+<code class="descname">N</code><span class="sig-paren">(</span><em>number</em>, <em>lengths</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/stat/length_plot.html#ReadStat.N"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.stat.length_plot.ReadStat.N" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculate the N{number}return N{number} information of lengths
+:param number: 0-100
+:param lengths: a list of length
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="grandflow.stat.length_plot.ReadStat.get_length">
+<code class="descname">get_length</code><span class="sig-paren">(</span><em>filename</em>, <em>index</em>, <em>min_len</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/stat/length_plot.html#ReadStat.get_length"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.stat.length_plot.ReadStat.get_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the length of record
+:param filename:
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="grandflow.stat.length_plot.ReadStat.get_total_length">
+<code class="descname">get_total_length</code><span class="sig-paren">(</span><em>arg1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/stat/length_plot.html#ReadStat.get_total_length"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.stat.length_plot.ReadStat.get_total_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>TODO: Docstring for get_total_length.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>arg1 (TODO): TODO</dd>
+</dl>
+<p>Returns: TODO</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="grandflow.stat.length_plot.ReadStat.over">
+<code class="descname">over</code><span class="sig-paren">(</span><em>number</em>, <em>lengths</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/stat/length_plot.html#ReadStat.over"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.stat.length_plot.ReadStat.over" title="Permalink to this definition">¶</a></dt>
+<dd><p>return length in lengths over {number}
+:param number:
+:param lengths:
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="grandflow.stat.length_plot.ReadStat.seq_stat">
+<code class="descname">seq_stat</code><span class="sig-paren">(</span><em>filenames</em>, <em>ngs=False</em>, <em>fofn=False</em>, <em>thread=1</em>, <em>min_len=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/stat/length_plot.html#ReadStat.seq_stat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.stat.length_plot.ReadStat.seq_stat" title="Permalink to this definition">¶</a></dt>
+<dd><p>statistics on fastq files
+:param filenames:
+:param fofn: a file contain fastq file list
+:param thread: thread process to read fastq files
+:param min_len:
+:return:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>reads_stat_dict={</dt>
+<dd>'file_num': file_num,
+'reads_num': reads_number,
+'total_length': total_length,
+'average_length': average_length,
+'longest_length': longest</dd>
+</dl>
+<p>}</p>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.stat.length_plot.fofn2list">
+<code class="descclassname">grandflow.stat.length_plot.</code><code class="descname">fofn2list</code><span class="sig-paren">(</span><em>fofn</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/stat/length_plot.html#fofn2list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.stat.length_plot.fofn2list" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="grandflow.stat.length_plot.get_args">
+<code class="descclassname">grandflow.stat.length_plot.</code><code class="descname">get_args</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/stat/length_plot.html#get_args"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.stat.length_plot.get_args" title="Permalink to this definition">¶</a></dt>
+<dd><p>get args
+:return:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.stat.length_plot.main">
+<code class="descclassname">grandflow.stat.length_plot.</code><code class="descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/stat/length_plot.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.stat.length_plot.main" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-grandflow.stat.seq_stat">
+<span id="grandflow-stat-seq-stat-module"></span><h2>grandflow.stat.seq_stat module<a class="headerlink" href="#module-grandflow.stat.seq_stat" title="Permalink to this headline">¶</a></h2>
+<p>To statistics on a list of fasta/fastq files</p>
+<dl class="class">
+<dt id="grandflow.stat.seq_stat.ReadStat">
+<em class="property">class </em><code class="descclassname">grandflow.stat.seq_stat.</code><code class="descname">ReadStat</code><span class="sig-paren">(</span><em>proj_name</em>, <em>file_list=None</em>, <em>min_len=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/stat/seq_stat.html#ReadStat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.stat.seq_stat.ReadStat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Statistic the reads length, GC content</p>
+<dl class="method">
+<dt id="grandflow.stat.seq_stat.ReadStat.N">
+<code class="descname">N</code><span class="sig-paren">(</span><em>number</em>, <em>lengths</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/stat/seq_stat.html#ReadStat.N"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.stat.seq_stat.ReadStat.N" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculate the N{number}return N{number} information of lengths
+:param number: 0-100
+:param lengths: a list of length
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="grandflow.stat.seq_stat.ReadStat.get_length">
+<code class="descname">get_length</code><span class="sig-paren">(</span><em>filename</em>, <em>index</em>, <em>min_len</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/stat/seq_stat.html#ReadStat.get_length"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.stat.seq_stat.ReadStat.get_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the length of record
+:param filename:
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="grandflow.stat.seq_stat.ReadStat.get_total_length">
+<code class="descname">get_total_length</code><span class="sig-paren">(</span><em>arg1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/stat/seq_stat.html#ReadStat.get_total_length"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.stat.seq_stat.ReadStat.get_total_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>TODO: Docstring for get_total_length.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>arg1 (TODO): TODO</dd>
+</dl>
+<p>Returns: TODO</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="grandflow.stat.seq_stat.ReadStat.over">
+<code class="descname">over</code><span class="sig-paren">(</span><em>number</em>, <em>lengths</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/stat/seq_stat.html#ReadStat.over"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.stat.seq_stat.ReadStat.over" title="Permalink to this definition">¶</a></dt>
+<dd><p>return length in lengths over {number}
+:param number:
+:param lengths:
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="grandflow.stat.seq_stat.ReadStat.seq_stat">
+<code class="descname">seq_stat</code><span class="sig-paren">(</span><em>filenames</em>, <em>ngs=False</em>, <em>fofn=False</em>, <em>thread=1</em>, <em>min_len=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/stat/seq_stat.html#ReadStat.seq_stat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.stat.seq_stat.ReadStat.seq_stat" title="Permalink to this definition">¶</a></dt>
+<dd><p>statistics on fastq files
+:param filenames:
+:param fofn: a file contain fastq file list
+:param thread: thread process to read fastq files
+:param min_len:
+:return:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>reads_stat_dict={</dt>
+<dd>'file_num': file_num,
+'reads_num': reads_number,
+'total_length': total_length,
+'average_length': average_length,
+'longest_length': longest</dd>
+</dl>
+<p>}</p>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.stat.seq_stat.fofn2list">
+<code class="descclassname">grandflow.stat.seq_stat.</code><code class="descname">fofn2list</code><span class="sig-paren">(</span><em>fofn</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/stat/seq_stat.html#fofn2list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.stat.seq_stat.fofn2list" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="grandflow.stat.seq_stat.get_args">
+<code class="descclassname">grandflow.stat.seq_stat.</code><code class="descname">get_args</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/stat/seq_stat.html#get_args"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.stat.seq_stat.get_args" title="Permalink to this definition">¶</a></dt>
+<dd><p>get args
+:return:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.stat.seq_stat.main">
+<code class="descclassname">grandflow.stat.seq_stat.</code><code class="descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/stat/seq_stat.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.stat.seq_stat.main" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-grandflow.stat">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-grandflow.stat" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">grandflow.stat package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-grandflow.stat.ReadStat">grandflow.stat.ReadStat module</a></li>
+<li><a class="reference internal" href="#module-grandflow.stat.length_plot">grandflow.stat.length_plot module</a></li>
+<li><a class="reference internal" href="#module-grandflow.stat.seq_stat">grandflow.stat.seq_stat module</a></li>
+<li><a class="reference internal" href="#module-grandflow.stat">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/grandflow.stat.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, GrandOmics.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/grandflow.stat.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

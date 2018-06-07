@@ -1,1 +1,974 @@
-../.docs/build/html/grandflow.io.html
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="cn">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>grandflow.io package &#8212; GrandFlow v0.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="grandflow-io-package">
+<h1>grandflow.io package<a class="headerlink" href="#grandflow-io-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="grandflow.io.align.html">grandflow.io.align package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="grandflow.io.align.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grandflow.io.align.html#grandflow-io-align-bamalignment-module">grandflow.io.align.BamAlignment module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grandflow.io.align.html#grandflow-io-align-bamio-module">grandflow.io.align.BamIO module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grandflow.io.align.html#module-grandflow.io.align.BlasrIO">grandflow.io.align.BlasrIO module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grandflow.io.align.html#grandflow-io-align-cmph5io-module">grandflow.io.align.CmpH5IO module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grandflow.io.align.html#module-grandflow.io.align.PacBioBamIndex">grandflow.io.align.PacBioBamIndex module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grandflow.io.align.html#module-grandflow.io.align">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="grandflow.io.dataset.html">grandflow.io.dataset package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="grandflow.io.dataset.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="grandflow.io.dataset.pyxb.html">grandflow.io.dataset.pyxb package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="grandflow.io.dataset.pyxb.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="grandflow.io.dataset.pyxb.html#grandflow-io-dataset-pyxb-datasetxsd-module">grandflow.io.dataset.pyxb.DataSetXsd module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="grandflow.io.dataset.pyxb.html#module-contents">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="grandflow.io.dataset.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grandflow.io.dataset.html#grandflow-io-dataset-dataseterrors-module">grandflow.io.dataset.DataSetErrors module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grandflow.io.dataset.html#grandflow-io-dataset-datasetio-module">grandflow.io.dataset.DataSetIO module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grandflow.io.dataset.html#grandflow-io-dataset-datasetmembers-module">grandflow.io.dataset.DataSetMembers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grandflow.io.dataset.html#grandflow-io-dataset-datasetmetatypes-module">grandflow.io.dataset.DataSetMetaTypes module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grandflow.io.dataset.html#grandflow-io-dataset-datasetreader-module">grandflow.io.dataset.DataSetReader module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grandflow.io.dataset.html#grandflow-io-dataset-datasetutils-module">grandflow.io.dataset.DataSetUtils module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grandflow.io.dataset.html#grandflow-io-dataset-datasetvalidator-module">grandflow.io.dataset.DataSetValidator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grandflow.io.dataset.html#grandflow-io-dataset-datasetwriter-module">grandflow.io.dataset.DataSetWriter module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grandflow.io.dataset.html#grandflow-io-dataset-utils-module">grandflow.io.dataset.utils module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grandflow.io.dataset.html#module-contents">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-grandflow.io.BarcodeH5Reader">
+<span id="grandflow-io-barcodeh5reader-module"></span><h2>grandflow.io.BarcodeH5Reader module<a class="headerlink" href="#module-grandflow.io.BarcodeH5Reader" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="grandflow.io.BarcodeH5Reader.BarcodeH5Fofn">
+<em class="property">class </em><code class="descclassname">grandflow.io.BarcodeH5Reader.</code><code class="descname">BarcodeH5Fofn</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/BarcodeH5Reader.html#BarcodeH5Fofn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.BarcodeH5Fofn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="attribute">
+<dt id="grandflow.io.BarcodeH5Reader.BarcodeH5Fofn.barcodeLabels">
+<code class="descname">barcodeLabels</code><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.BarcodeH5Fofn.barcodeLabels" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.BarcodeH5Reader.BarcodeH5Fofn.holeNumbers">
+<code class="descname">holeNumbers</code><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.BarcodeH5Fofn.holeNumbers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="grandflow.io.BarcodeH5Reader.BarcodeH5Fofn.labeledZmwFromHoleNumber">
+<code class="descname">labeledZmwFromHoleNumber</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/BarcodeH5Reader.html#BarcodeH5Fofn.labeledZmwFromHoleNumber"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.BarcodeH5Fofn.labeledZmwFromHoleNumber" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="grandflow.io.BarcodeH5Reader.BarcodeH5Fofn.labeledZmwFromName">
+<code class="descname">labeledZmwFromName</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/BarcodeH5Reader.html#BarcodeH5Fofn.labeledZmwFromName"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.BarcodeH5Fofn.labeledZmwFromName" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="grandflow.io.BarcodeH5Reader.BarcodeH5Fofn.labeledZmwsFromBarcodeLabel">
+<code class="descname">labeledZmwsFromBarcodeLabel</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/BarcodeH5Reader.html#BarcodeH5Fofn.labeledZmwsFromBarcodeLabel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.BarcodeH5Fofn.labeledZmwsFromBarcodeLabel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.BarcodeH5Reader.BarcodeH5Fofn.movieNames">
+<code class="descname">movieNames</code><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.BarcodeH5Fofn.movieNames" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="grandflow.io.BarcodeH5Reader.BarcodeH5Fofn.readerForMovie">
+<code class="descname">readerForMovie</code><span class="sig-paren">(</span><em>movieName</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/BarcodeH5Reader.html#BarcodeH5Fofn.readerForMovie"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.BarcodeH5Fofn.readerForMovie" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a BarcodeH5Reader for a movieName</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.BarcodeH5Reader.BarcodeH5Fofn.scoreMode">
+<code class="descname">scoreMode</code><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.BarcodeH5Fofn.scoreMode" title="Permalink to this definition">¶</a></dt>
+<dd><p>String specifying whether the barcodes were score symmetrically or in pairs</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="grandflow.io.BarcodeH5Reader.BarcodeH5Reader">
+<em class="property">class </em><code class="descclassname">grandflow.io.BarcodeH5Reader.</code><code class="descname">BarcodeH5Reader</code><span class="sig-paren">(</span><em>fname</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/BarcodeH5Reader.html#BarcodeH5Reader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.BarcodeH5Reader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="attribute">
+<dt id="grandflow.io.BarcodeH5Reader.BarcodeH5Reader.barcodeLabels">
+<code class="descname">barcodeLabels</code><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.BarcodeH5Reader.barcodeLabels" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.BarcodeH5Reader.BarcodeH5Reader.holeNumbers">
+<code class="descname">holeNumbers</code><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.BarcodeH5Reader.holeNumbers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="grandflow.io.BarcodeH5Reader.BarcodeH5Reader.labeledZmwFromHoleNumber">
+<code class="descname">labeledZmwFromHoleNumber</code><span class="sig-paren">(</span><em>holeNumber</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/BarcodeH5Reader.html#BarcodeH5Reader.labeledZmwFromHoleNumber"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.BarcodeH5Reader.labeledZmwFromHoleNumber" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a LabeledZmw object from the holeNumber</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="grandflow.io.BarcodeH5Reader.BarcodeH5Reader.labeledZmwsFromBarcodeLabel">
+<code class="descname">labeledZmwsFromBarcodeLabel</code><span class="sig-paren">(</span><em>bcLabel</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/BarcodeH5Reader.html#BarcodeH5Reader.labeledZmwsFromBarcodeLabel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.BarcodeH5Reader.labeledZmwsFromBarcodeLabel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of LabeledZmw objects for the particular
+barcode label, an empty list if there are no ZMWs for this
+barcode.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.BarcodeH5Reader.BarcodeH5Reader.movieName">
+<code class="descname">movieName</code><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.BarcodeH5Reader.movieName" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.BarcodeH5Reader.BarcodeH5Reader.scoreMode">
+<code class="descname">scoreMode</code><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.BarcodeH5Reader.scoreMode" title="Permalink to this definition">¶</a></dt>
+<dd><p>String specifying whether the barcodes were score symmetrically or in pairs</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="grandflow.io.BarcodeH5Reader.LabeledZmw">
+<em class="property">class </em><code class="descclassname">grandflow.io.BarcodeH5Reader.</code><code class="descname">LabeledZmw</code><span class="sig-paren">(</span><em>holeNumber</em>, <em>nScored</em>, <em>bestIdx</em>, <em>bestScore</em>, <em>secondBestIdx=-1</em>, <em>secondBestScore=0</em>, <em>allScores=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/BarcodeH5Reader.html#LabeledZmw"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.LabeledZmw" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>A scored ZMW represents a ZMW object and its corresponding
+barcode scores. Some fields are considered optional</p>
+<dl class="attribute">
+<dt id="grandflow.io.BarcodeH5Reader.LabeledZmw.allScores">
+<code class="descname">allScores</code><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.LabeledZmw.allScores" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.BarcodeH5Reader.LabeledZmw.averageScore">
+<code class="descname">averageScore</code><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.LabeledZmw.averageScore" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.BarcodeH5Reader.LabeledZmw.bestIdx">
+<code class="descname">bestIdx</code><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.LabeledZmw.bestIdx" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.BarcodeH5Reader.LabeledZmw.bestScore">
+<code class="descname">bestScore</code><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.LabeledZmw.bestScore" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="grandflow.io.BarcodeH5Reader.LabeledZmw.fromBestRecord">
+<em class="property">static </em><code class="descname">fromBestRecord</code><span class="sig-paren">(</span><em>npRow</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/BarcodeH5Reader.html#LabeledZmw.fromBestRecord"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.LabeledZmw.fromBestRecord" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.BarcodeH5Reader.LabeledZmw.holeNumber">
+<code class="descname">holeNumber</code><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.LabeledZmw.holeNumber" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.BarcodeH5Reader.LabeledZmw.nScored">
+<code class="descname">nScored</code><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.LabeledZmw.nScored" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.BarcodeH5Reader.LabeledZmw.scoreRatio">
+<code class="descname">scoreRatio</code><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.LabeledZmw.scoreRatio" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.BarcodeH5Reader.LabeledZmw.secondBestIdx">
+<code class="descname">secondBestIdx</code><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.LabeledZmw.secondBestIdx" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.BarcodeH5Reader.LabeledZmw.secondBestScore">
+<code class="descname">secondBestScore</code><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.LabeledZmw.secondBestScore" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="grandflow.io.BarcodeH5Reader.LabeledZmw.toBestRecord">
+<code class="descname">toBestRecord</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/BarcodeH5Reader.html#LabeledZmw.toBestRecord"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.LabeledZmw.toBestRecord" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a summary record suitable for storage</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="grandflow.io.BarcodeH5Reader.MPBarcodeH5Reader">
+<em class="property">class </em><code class="descclassname">grandflow.io.BarcodeH5Reader.</code><code class="descname">MPBarcodeH5Reader</code><span class="sig-paren">(</span><em>parts</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/BarcodeH5Reader.html#MPBarcodeH5Reader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.MPBarcodeH5Reader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="attribute">
+<dt id="grandflow.io.BarcodeH5Reader.MPBarcodeH5Reader.barcodeLabels">
+<code class="descname">barcodeLabels</code><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.MPBarcodeH5Reader.barcodeLabels" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="grandflow.io.BarcodeH5Reader.MPBarcodeH5Reader.choosePart">
+<code class="descname">choosePart</code><span class="sig-paren">(</span><em>holeNumber</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/BarcodeH5Reader.html#MPBarcodeH5Reader.choosePart"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.MPBarcodeH5Reader.choosePart" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="grandflow.io.BarcodeH5Reader.MPBarcodeH5Reader.labeledZmwFromHoleNumber">
+<code class="descname">labeledZmwFromHoleNumber</code><span class="sig-paren">(</span><em>holeNumber</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/BarcodeH5Reader.html#MPBarcodeH5Reader.labeledZmwFromHoleNumber"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.MPBarcodeH5Reader.labeledZmwFromHoleNumber" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a LabeledZmw object from the holeNumber</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="grandflow.io.BarcodeH5Reader.MPBarcodeH5Reader.labeledZmwsFromBarcodeLabel">
+<code class="descname">labeledZmwsFromBarcodeLabel</code><span class="sig-paren">(</span><em>bcLabel</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/BarcodeH5Reader.html#MPBarcodeH5Reader.labeledZmwsFromBarcodeLabel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.MPBarcodeH5Reader.labeledZmwsFromBarcodeLabel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.BarcodeH5Reader.MPBarcodeH5Reader.scoreMode">
+<code class="descname">scoreMode</code><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.MPBarcodeH5Reader.scoreMode" title="Permalink to this definition">¶</a></dt>
+<dd><p>String specifying whether the barcodes were score symmetrically or in pairs</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.io.BarcodeH5Reader.writeBarcodeH5">
+<code class="descclassname">grandflow.io.BarcodeH5Reader.</code><code class="descname">writeBarcodeH5</code><span class="sig-paren">(</span><em>labeledZmws</em>, <em>labeler</em>, <em>outFile</em>, <em>writeExtendedInfo=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/BarcodeH5Reader.html#writeBarcodeH5"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.BarcodeH5Reader.writeBarcodeH5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write a barcode file from a list of labeled ZMWs. In addition
+to labeledZmws, this function takes a
+pbbarcode.BarcodeLabeler.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="grandflow-io-bash5io-module">
+<h2>grandflow.io.BasH5IO module<a class="headerlink" href="#grandflow-io-bash5io-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-grandflow.io.FastaIO">
+<span id="grandflow-io-fastaio-module"></span><h2>grandflow.io.FastaIO module<a class="headerlink" href="#module-grandflow.io.FastaIO" title="Permalink to this headline">¶</a></h2>
+<p>Streaming I/O support for FASTA files.</p>
+<dl class="class">
+<dt id="grandflow.io.FastaIO.FastaRecord">
+<em class="property">class </em><code class="descclassname">grandflow.io.FastaIO.</code><code class="descname">FastaRecord</code><span class="sig-paren">(</span><em>header</em>, <em>sequence</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/FastaIO.html#FastaRecord"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.FastaIO.FastaRecord" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>A FastaRecord object models a named sequence in a FASTA file.</p>
+<dl class="attribute">
+<dt id="grandflow.io.FastaIO.FastaRecord.COLUMNS">
+<code class="descname">COLUMNS</code><em class="property"> = 60</em><a class="headerlink" href="#grandflow.io.FastaIO.FastaRecord.COLUMNS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.FastaIO.FastaRecord.DELIMITER">
+<code class="descname">DELIMITER</code><em class="property"> = '&gt;'</em><a class="headerlink" href="#grandflow.io.FastaIO.FastaRecord.DELIMITER" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.FastaIO.FastaRecord.comment">
+<code class="descname">comment</code><a class="headerlink" href="#grandflow.io.FastaIO.FastaRecord.comment" title="Permalink to this definition">¶</a></dt>
+<dd><p>The comment associated with the sequence in the FASTA file, equal to
+the contents of the FASTA header following the first whitespace</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="grandflow.io.FastaIO.FastaRecord.fromString">
+<em class="property">classmethod </em><code class="descname">fromString</code><span class="sig-paren">(</span><em>s</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/FastaIO.html#FastaRecord.fromString"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.FastaIO.FastaRecord.fromString" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interprets a string as a FASTA record.  Does not make any
+assumptions about wrapping of the sequence string.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.FastaIO.FastaRecord.header">
+<code class="descname">header</code><a class="headerlink" href="#grandflow.io.FastaIO.FastaRecord.header" title="Permalink to this definition">¶</a></dt>
+<dd><p>The header of the sequence in the FASTA file, equal to the entire
+first line of the FASTA record following the '&gt;' character.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">You should almost certainly be using &quot;id&quot;, not &quot;header&quot;.</p>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.FastaIO.FastaRecord.id">
+<code class="descname">id</code><a class="headerlink" href="#grandflow.io.FastaIO.FastaRecord.id" title="Permalink to this definition">¶</a></dt>
+<dd><p>The id of the sequence in the FASTA file, equal to the FASTA header
+up to the first whitespace.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.FastaIO.FastaRecord.length">
+<code class="descname">length</code><a class="headerlink" href="#grandflow.io.FastaIO.FastaRecord.length" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the length of the FASTA sequence</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.FastaIO.FastaRecord.name">
+<code class="descname">name</code><a class="headerlink" href="#grandflow.io.FastaIO.FastaRecord.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>DEPRECATED: The name of the sequence in the FASTA file, equal to
+the entire FASTA header following the '&gt;' character</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="grandflow.io.FastaIO.FastaRecord.reverseComplement">
+<code class="descname">reverseComplement</code><span class="sig-paren">(</span><em>preserveHeader=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/FastaIO.html#FastaRecord.reverseComplement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.FastaIO.FastaRecord.reverseComplement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a new FastaRecord with the reverse-complemented DNA sequence.
+Optionally, supply a name</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.FastaIO.FastaRecord.sequence">
+<code class="descname">sequence</code><a class="headerlink" href="#grandflow.io.FastaIO.FastaRecord.sequence" title="Permalink to this definition">¶</a></dt>
+<dd><p>The sequence for the record as present in the FASTA file.
+(Newlines are removed but otherwise no sequence normalization
+is performed).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="grandflow.io.FastaIO.FastaReader">
+<em class="property">class </em><code class="descclassname">grandflow.io.FastaIO.</code><code class="descname">FastaReader</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/FastaIO.html#FastaReader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.FastaIO.FastaReader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#grandflow.io.base.ReaderBase" title="grandflow.io.base.ReaderBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">grandflow.io.base.ReaderBase</span></code></a></p>
+<p>Streaming reader for FASTA files, useable as a one-shot iterator
+over FastaRecord objects.  Agnostic about line wrapping.</p>
+<p>Example:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">grandflow.io</span> <span class="kn">import</span> <span class="n">FastaReader</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">grandflow</span> <span class="kn">import</span> <span class="n">data</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">filename</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">getTinyFasta</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">FastaReader</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">r</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">record</span><span class="o">.</span><span class="n">header</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">sequence</span><span class="p">)</span>
+<span class="go">ref000001|EGFR_Exon_2 183</span>
+<span class="go">ref000002|EGFR_Exon_3 203</span>
+<span class="go">ref000003|EGFR_Exon_4 215</span>
+<span class="go">ref000004|EGFR_Exon_5 157</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="grandflow.io.FastaIO.FastaReader.DELIMITER">
+<code class="descname">DELIMITER</code><em class="property"> = '&gt;'</em><a class="headerlink" href="#grandflow.io.FastaIO.FastaReader.DELIMITER" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="grandflow.io.FastaIO.FastaWriter">
+<em class="property">class </em><code class="descclassname">grandflow.io.FastaIO.</code><code class="descname">FastaWriter</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/FastaIO.html#FastaWriter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.FastaIO.FastaWriter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#grandflow.io.base.WriterBase" title="grandflow.io.base.WriterBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">grandflow.io.base.WriterBase</span></code></a></p>
+<p>A FASTA file writer class</p>
+<p>Example:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">grandflow.io</span> <span class="kn">import</span> <span class="n">FastaWriter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">FastaWriter</span><span class="p">(</span><span class="s2">&quot;output.fasta.gz&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">writer</span><span class="o">.</span><span class="n">writeRecord</span><span class="p">(</span><span class="s2">&quot;dog&quot;</span><span class="p">,</span> <span class="s2">&quot;GATTACA&quot;</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">writer</span><span class="o">.</span><span class="n">writeRecord</span><span class="p">(</span><span class="s2">&quot;cat&quot;</span><span class="p">,</span> <span class="s2">&quot;CATTACA&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>(Notice that underlying file will be automatically closed after
+exit from the <cite>with</cite> block.)</p>
+<dl class="method">
+<dt id="grandflow.io.FastaIO.FastaWriter.writeRecord">
+<code class="descname">writeRecord</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/FastaIO.html#FastaWriter.writeRecord"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.FastaIO.FastaWriter.writeRecord" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write a FASTA record to the file.  If given one argument, it is
+interpreted as a <code class="docutils literal notranslate"><span class="pre">FastaRecord</span></code>.  Given two arguments, they
+are interpreted as the name and the sequence.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.FastaIO.FastaTable">
+<code class="descclassname">grandflow.io.FastaIO.</code><code class="descname">FastaTable</code><a class="headerlink" href="#grandflow.io.FastaIO.FastaTable" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#grandflow.io.FastaIO.IndexedFastaReader" title="grandflow.io.FastaIO.IndexedFastaReader"><code class="xref py py-class docutils literal notranslate"><span class="pre">grandflow.io.FastaIO.IndexedFastaReader</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="grandflow.io.FastaIO.IndexedFastaReader">
+<em class="property">class </em><code class="descclassname">grandflow.io.FastaIO.</code><code class="descname">IndexedFastaReader</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/FastaIO.html#IndexedFastaReader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.FastaIO.IndexedFastaReader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#grandflow.io.base.ReaderBase" title="grandflow.io.base.ReaderBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">grandflow.io.base.ReaderBase</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">collections.abc.Sequence</span></code></a></p>
+<p>Random-access FASTA file reader.</p>
+<p>Requires that the lines of the FASTA file be fixed-length and that
+there is a FASTA index file (generated by <cite>samtools faidx</cite>) with
+name <cite>fastaFilename.fai</cite> in the same directory.</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">grandflow.io</span> <span class="kn">import</span> <span class="n">FastaTable</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">grandflow</span> <span class="kn">import</span> <span class="n">data</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">filename</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">getFasta</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">IndexedFastaReader</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">t</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span> 
+<span class="go">[&lt;IndexedFastaRecord: ref000001|EGFR_Exon_2&gt;,</span>
+<span class="go"> &lt;IndexedFastaRecord: ref000002|EGFR_Exon_3&gt;,</span>
+<span class="go"> &lt;IndexedFastaRecord: ref000003|EGFR_Exon_4&gt;,</span>
+<span class="go"> &lt;IndexedFastaRecord: ref000004|EGFR_Exon_5&gt;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.io.FastaIO.splitFastaHeader">
+<code class="descclassname">grandflow.io.FastaIO.</code><code class="descname">splitFastaHeader</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/FastaIO.html#splitFastaHeader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.FastaIO.splitFastaHeader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split a FASTA/FASTQ header into its id and comment components</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-grandflow.io.FastqIO">
+<span id="grandflow-io-fastqio-module"></span><h2>grandflow.io.FastqIO module<a class="headerlink" href="#module-grandflow.io.FastqIO" title="Permalink to this headline">¶</a></h2>
+<p>I/O support for FASTQ files</p>
+<dl class="class">
+<dt id="grandflow.io.FastqIO.FastqRecord">
+<em class="property">class </em><code class="descclassname">grandflow.io.FastqIO.</code><code class="descname">FastqRecord</code><span class="sig-paren">(</span><em>header</em>, <em>sequence</em>, <em>quality=None</em>, <em>qualityString=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/FastqIO.html#FastqRecord"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.FastqIO.FastqRecord" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>A <code class="docutils literal notranslate"><span class="pre">FastqRecord</span></code> object models a named sequence and its quality
+values in a FASTQ file.  For reference consult <a class="reference external" href="http://en.wikipedia.org/wiki/FASTQ_format">Wikipedia's FASTQ
+entry</a>. We adopt the Sanger encoding convention, allowing the
+encoding of QV values in [0, 93] using ASCII 33 to 126. We only
+support FASTQ files in the four-line convention (unwrapped).
+Wrapped FASTQ files are generally considered a bad idea as the &#64;,
++ delimiters can also appear in the quality string, thus parsing
+cannot be done safely.</p>
+<dl class="attribute">
+<dt id="grandflow.io.FastqIO.FastqRecord.DELIMITER1">
+<code class="descname">DELIMITER1</code><em class="property"> = '&#64;'</em><a class="headerlink" href="#grandflow.io.FastqIO.FastqRecord.DELIMITER1" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.FastqIO.FastqRecord.DELIMITER2">
+<code class="descname">DELIMITER2</code><em class="property"> = '+'</em><a class="headerlink" href="#grandflow.io.FastqIO.FastqRecord.DELIMITER2" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.FastqIO.FastqRecord.comment">
+<code class="descname">comment</code><a class="headerlink" href="#grandflow.io.FastqIO.FastqRecord.comment" title="Permalink to this definition">¶</a></dt>
+<dd><p>The comment associated with the sequence in the FASTQ file, equal to
+the contents of the FASTQ header following the first whitespace</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="grandflow.io.FastqIO.FastqRecord.fromString">
+<em class="property">classmethod </em><code class="descname">fromString</code><span class="sig-paren">(</span><em>s</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/FastqIO.html#FastqRecord.fromString"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.FastqIO.FastqRecord.fromString" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interprets a string as a FASTQ record. Only supports four-line
+format, as wrapped FASTQs can't easily be safely parsed.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.FastqIO.FastqRecord.header">
+<code class="descname">header</code><a class="headerlink" href="#grandflow.io.FastqIO.FastqRecord.header" title="Permalink to this definition">¶</a></dt>
+<dd><p>The header of the sequence in the FASTQ file</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.FastqIO.FastqRecord.id">
+<code class="descname">id</code><a class="headerlink" href="#grandflow.io.FastqIO.FastqRecord.id" title="Permalink to this definition">¶</a></dt>
+<dd><p>The id of the sequence in the FASTQ file, equal to the FASTQ header
+up to the first whitespace.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.FastqIO.FastqRecord.length">
+<code class="descname">length</code><a class="headerlink" href="#grandflow.io.FastqIO.FastqRecord.length" title="Permalink to this definition">¶</a></dt>
+<dd><p>The length of the sequence</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.FastqIO.FastqRecord.name">
+<code class="descname">name</code><a class="headerlink" href="#grandflow.io.FastqIO.FastqRecord.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>DEPRECATED: The name of the sequence in the FASTQ file</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.FastqIO.FastqRecord.quality">
+<code class="descname">quality</code><a class="headerlink" href="#grandflow.io.FastqIO.FastqRecord.quality" title="Permalink to this definition">¶</a></dt>
+<dd><p>The quality values, as an array of integers</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.FastqIO.FastqRecord.qualityString">
+<code class="descname">qualityString</code><a class="headerlink" href="#grandflow.io.FastqIO.FastqRecord.qualityString" title="Permalink to this definition">¶</a></dt>
+<dd><p>The quality values as an ASCII-encoded string</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="grandflow.io.FastqIO.FastqRecord.reverseComplement">
+<code class="descname">reverseComplement</code><span class="sig-paren">(</span><em>preserveHeader=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/FastqIO.html#FastqRecord.reverseComplement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.FastqIO.FastqRecord.reverseComplement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a new FastaRecord with the reverse-complemented DNA sequence.
+Optionally, supply a name</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.FastqIO.FastqRecord.sequence">
+<code class="descname">sequence</code><a class="headerlink" href="#grandflow.io.FastqIO.FastqRecord.sequence" title="Permalink to this definition">¶</a></dt>
+<dd><p>The sequence for the record as present in the FASTQ file.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="grandflow.io.FastqIO.FastqReader">
+<em class="property">class </em><code class="descclassname">grandflow.io.FastqIO.</code><code class="descname">FastqReader</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/FastqIO.html#FastqReader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.FastqIO.FastqReader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#grandflow.io.base.ReaderBase" title="grandflow.io.base.ReaderBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">grandflow.io.base.ReaderBase</span></code></a></p>
+<p>Reader for FASTQ files, useable as a one-shot iterator over
+FastqRecord objects.  FASTQ files must follow the four-line
+convention.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="grandflow.io.FastqIO.FastqWriter">
+<em class="property">class </em><code class="descclassname">grandflow.io.FastqIO.</code><code class="descname">FastqWriter</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/FastqIO.html#FastqWriter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.FastqIO.FastqWriter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#grandflow.io.base.WriterBase" title="grandflow.io.base.WriterBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">grandflow.io.base.WriterBase</span></code></a></p>
+<p>A FASTQ file writer class</p>
+<p>Example:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">grandflow.io</span> <span class="kn">import</span> <span class="n">FastqWriter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">FastqWriter</span><span class="p">(</span><span class="s2">&quot;output.fq.gz&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">writer</span><span class="o">.</span><span class="n">writeRecord</span><span class="p">(</span><span class="s2">&quot;dog&quot;</span><span class="p">,</span> <span class="s2">&quot;GATTACA&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">35</span><span class="p">]</span><span class="o">*</span><span class="mi">7</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">writer</span><span class="o">.</span><span class="n">writeRecord</span><span class="p">(</span><span class="s2">&quot;cat&quot;</span><span class="p">,</span> <span class="s2">&quot;CATTACA&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">35</span><span class="p">]</span><span class="o">*</span><span class="mi">7</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>(Notice that underlying file will be automatically closed after
+exit from the <cite>with</cite> block.)</p>
+<dl class="method">
+<dt id="grandflow.io.FastqIO.FastqWriter.writeRecord">
+<code class="descname">writeRecord</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/FastqIO.html#FastqWriter.writeRecord"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.FastqIO.FastqWriter.writeRecord" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write a FASTQ record to the file.  If given one argument, it is
+interpreted as a <code class="docutils literal notranslate"><span class="pre">FastqRecord</span></code>.  Given three arguments, they
+are interpreted as the name, sequence, and quality.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.io.FastqIO.qvsFromAscii">
+<code class="descclassname">grandflow.io.FastqIO.</code><code class="descname">qvsFromAscii</code><span class="sig-paren">(</span><em>s</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/FastqIO.html#qvsFromAscii"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.FastqIO.qvsFromAscii" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="grandflow.io.FastqIO.asciiFromQvs">
+<code class="descclassname">grandflow.io.FastqIO.</code><code class="descname">asciiFromQvs</code><span class="sig-paren">(</span><em>a</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/FastqIO.html#asciiFromQvs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.FastqIO.asciiFromQvs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-grandflow.io.FofnIO">
+<span id="grandflow-io-fofnio-module"></span><h2>grandflow.io.FofnIO module<a class="headerlink" href="#module-grandflow.io.FofnIO" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="grandflow.io.FofnIO.readFofn">
+<code class="descclassname">grandflow.io.FofnIO.</code><code class="descname">readFofn</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/FofnIO.html#readFofn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.FofnIO.readFofn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return iterator over filenames in a FOFN (&quot;file-of-filenames&quot;)
+file or file-like object.</p>
+<p>If f is a path to a true FOFN on disk, any paths listed in the
+FOFN that are relative (i.e., do not contain a leading '/') will
+be reckoned from the directory containing the FOFN.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.io.FofnIO.readInputXML">
+<code class="descclassname">grandflow.io.FofnIO.</code><code class="descname">readInputXML</code><span class="sig-paren">(</span><em>fname</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/FofnIO.html#readInputXML"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.FofnIO.readInputXML" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="grandflow.io.FofnIO.enumeratePulseFiles">
+<code class="descclassname">grandflow.io.FofnIO.</code><code class="descname">enumeratePulseFiles</code><span class="sig-paren">(</span><em>fname</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/FofnIO.html#enumeratePulseFiles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.FofnIO.enumeratePulseFiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>A pulse file is a file with suffix .bax.h5, .plx.h5, or bas.h5</p>
+<p>fname is either a name of a pulse file, a list of names of pulse
+files, a FOFN (file of file names) listing pulse files, or an
+input.xml file.</p>
+<p>This is a generalization of readFofn for the case where fname is
+of type fofn|pulse, provided for convenience for tools that accept
+such an argument.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-grandflow.io.GffIO">
+<span id="grandflow-io-gffio-module"></span><h2>grandflow.io.GffIO module<a class="headerlink" href="#module-grandflow.io.GffIO" title="Permalink to this headline">¶</a></h2>
+<p>I/O support for GFF3 files.</p>
+<dl class="docutils">
+<dt>The specification for the GFF format is available at</dt>
+<dd><a class="reference external" href="http://www.sequenceontology.org/gff3.shtml">http://www.sequenceontology.org/gff3.shtml</a></dd>
+</dl>
+<dl class="class">
+<dt id="grandflow.io.GffIO.Gff3Record">
+<em class="property">class </em><code class="descclassname">grandflow.io.GffIO.</code><code class="descname">Gff3Record</code><span class="sig-paren">(</span><em>seqid</em>, <em>start</em>, <em>end</em>, <em>type</em>, <em>score='.'</em>, <em>strand='.'</em>, <em>phase='.'</em>, <em>source='.'</em>, <em>attributes=()</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/GffIO.html#Gff3Record"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.GffIO.Gff3Record" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class for GFF record, providing uniform access to standard
+GFF fields and attributes.</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">grandflow.io</span> <span class="kn">import</span> <span class="n">Gff3Record</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">record</span> <span class="o">=</span> <span class="n">Gff3Record</span><span class="p">(</span><span class="s2">&quot;chr1&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="s2">&quot;insertion&quot;</span><span class="p">,</span>
+<span class="gp">... </span>                    <span class="n">attributes</span><span class="o">=</span><span class="p">[(</span><span class="s2">&quot;foo&quot;</span><span class="p">,</span> <span class="s2">&quot;1&quot;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;bar&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">record</span><span class="o">.</span><span class="n">start</span>
+<span class="go">10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">record</span><span class="o">.</span><span class="n">foo</span>
+<span class="go">&#39;1&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">record</span><span class="o">.</span><span class="n">baz</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">del</span> <span class="n">record</span><span class="o">.</span><span class="n">baz</span>
+</pre></div>
+</div>
+<p>Attribute access using record.fieldName notation raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>
+if an attribute named fieldName doesn't exist.  Use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">fieldName</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>to fetch a field or attribute with None default or:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">fieldName</span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>to fetch the field or attribute with a custom default.</p>
+<dl class="method">
+<dt id="grandflow.io.GffIO.Gff3Record.copy">
+<code class="descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/GffIO.html#Gff3Record.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.GffIO.Gff3Record.copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a shallow copy</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="grandflow.io.GffIO.Gff3Record.fromString">
+<em class="property">classmethod </em><code class="descname">fromString</code><span class="sig-paren">(</span><em>s</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/GffIO.html#Gff3Record.fromString"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.GffIO.Gff3Record.fromString" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse a string as a GFF record.
+Trailing whitespace is ignored.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="grandflow.io.GffIO.Gff3Record.get">
+<code class="descname">get</code><span class="sig-paren">(</span><em>name</em>, <em>default=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/GffIO.html#Gff3Record.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.GffIO.Gff3Record.get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="grandflow.io.GffIO.Gff3Record.put">
+<code class="descname">put</code><span class="sig-paren">(</span><em>name</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/GffIO.html#Gff3Record.put"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.GffIO.Gff3Record.put" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="grandflow.io.GffIO.GffReader">
+<em class="property">class </em><code class="descclassname">grandflow.io.GffIO.</code><code class="descname">GffReader</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/GffIO.html#GffReader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.GffIO.GffReader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#grandflow.io.base.ReaderBase" title="grandflow.io.base.ReaderBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">grandflow.io.base.ReaderBase</span></code></a></p>
+<p>A GFF file reader class</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="grandflow.io.GffIO.GffWriter">
+<em class="property">class </em><code class="descclassname">grandflow.io.GffIO.</code><code class="descname">GffWriter</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/GffIO.html#GffWriter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.GffIO.GffWriter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#grandflow.io.base.WriterBase" title="grandflow.io.base.WriterBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">grandflow.io.base.WriterBase</span></code></a></p>
+<p>A GFF file writer class</p>
+<dl class="method">
+<dt id="grandflow.io.GffIO.GffWriter.writeHeader">
+<code class="descname">writeHeader</code><span class="sig-paren">(</span><em>headerLine</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/GffIO.html#GffWriter.writeHeader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.GffIO.GffWriter.writeHeader" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="grandflow.io.GffIO.GffWriter.writeRecord">
+<code class="descname">writeRecord</code><span class="sig-paren">(</span><em>record</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/GffIO.html#GffWriter.writeRecord"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.GffIO.GffWriter.writeRecord" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-grandflow.io.VcfIO">
+<span id="grandflow-io-vcfio-module"></span><h2>grandflow.io.VcfIO module<a class="headerlink" href="#module-grandflow.io.VcfIO" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="grandflow.io.VcfIO.Vcf4Record">
+<em class="property">class </em><code class="descclassname">grandflow.io.VcfIO.</code><code class="descname">Vcf4Record</code><span class="sig-paren">(</span><em>chrom</em>, <em>pos</em>, <em>id</em>, <em>ref</em>, <em>alt</em>, <em>qual</em>, <em>filt</em>, <em>info</em>, <em>*fields</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/VcfIO.html#Vcf4Record"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.VcfIO.Vcf4Record" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class for VCF record, providing uniform access to standard
+VCF fields and attributes.</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">grandflow.io</span> <span class="kn">import</span> <span class="n">Vcf4Record</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rec1</span> <span class="o">=</span> <span class="n">Vcf4Record</span><span class="p">(</span><span class="s2">&quot;ecoliK12_pbi_March2013&quot;</span><span class="p">,</span>                               <span class="mi">84</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="s2">&quot;TG&quot;</span><span class="p">,</span> <span class="s2">&quot;T&quot;</span><span class="p">,</span> <span class="mi">48</span><span class="p">,</span> <span class="s2">&quot;PASS&quot;</span><span class="p">,</span> <span class="p">[(</span><span class="s2">&quot;DP&quot;</span><span class="p">,</span> <span class="mi">53</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">rec1</span><span class="p">)</span>
+<span class="go">&#39;ecoliK12_pbi_March2013\t84\t.\tTG\tT\t48\tPASS\tDP=53&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rec2</span> <span class="o">=</span> <span class="n">Vcf4Record</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">rec1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rec1</span> <span class="o">==</span> <span class="n">rec2</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rec1</span><span class="o">.</span><span class="n">pos</span>
+<span class="go">84</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rec1</span><span class="o">.</span><span class="n">filter</span>
+<span class="go">&#39;PASS&#39;</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="grandflow.io.VcfIO.Vcf4Record.alt">
+<code class="descname">alt</code><a class="headerlink" href="#grandflow.io.VcfIO.Vcf4Record.alt" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.VcfIO.Vcf4Record.chrom">
+<code class="descname">chrom</code><a class="headerlink" href="#grandflow.io.VcfIO.Vcf4Record.chrom" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.VcfIO.Vcf4Record.fields">
+<code class="descname">fields</code><a class="headerlink" href="#grandflow.io.VcfIO.Vcf4Record.fields" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.VcfIO.Vcf4Record.filter">
+<code class="descname">filter</code><a class="headerlink" href="#grandflow.io.VcfIO.Vcf4Record.filter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="grandflow.io.VcfIO.Vcf4Record.fromString">
+<em class="property">static </em><code class="descname">fromString</code><span class="sig-paren">(</span><em>s</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/VcfIO.html#Vcf4Record.fromString"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.VcfIO.Vcf4Record.fromString" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.VcfIO.Vcf4Record.id">
+<code class="descname">id</code><a class="headerlink" href="#grandflow.io.VcfIO.Vcf4Record.id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.VcfIO.Vcf4Record.info">
+<code class="descname">info</code><a class="headerlink" href="#grandflow.io.VcfIO.Vcf4Record.info" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.VcfIO.Vcf4Record.pos">
+<code class="descname">pos</code><a class="headerlink" href="#grandflow.io.VcfIO.Vcf4Record.pos" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.VcfIO.Vcf4Record.qual">
+<code class="descname">qual</code><a class="headerlink" href="#grandflow.io.VcfIO.Vcf4Record.qual" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="grandflow.io.VcfIO.Vcf4Record.ref">
+<code class="descname">ref</code><a class="headerlink" href="#grandflow.io.VcfIO.Vcf4Record.ref" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="grandflow.io.VcfIO.VcfReader">
+<em class="property">class </em><code class="descclassname">grandflow.io.VcfIO.</code><code class="descname">VcfReader</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/VcfIO.html#VcfReader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.VcfIO.VcfReader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#grandflow.io.base.ReaderBase" title="grandflow.io.base.ReaderBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">grandflow.io.base.ReaderBase</span></code></a></p>
+<p>read vcf file return Vcf4Record</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-grandflow.io.base">
+<span id="grandflow-io-base-module"></span><h2>grandflow.io.base module<a class="headerlink" href="#module-grandflow.io.base" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="grandflow.io.base.ReaderBase">
+<em class="property">class </em><code class="descclassname">grandflow.io.base.</code><code class="descname">ReaderBase</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/base.html#ReaderBase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.base.ReaderBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="method">
+<dt id="grandflow.io.base.ReaderBase.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/base.html#ReaderBase.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.base.ReaderBase.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close the underlying file</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="grandflow.io.base.WriterBase">
+<em class="property">class </em><code class="descclassname">grandflow.io.base.</code><code class="descname">WriterBase</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/base.html#WriterBase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.base.WriterBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="method">
+<dt id="grandflow.io.base.WriterBase.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/base.html#WriterBase.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.base.WriterBase.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close the underlying file</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-grandflow.io.decorators">
+<span id="grandflow-io-decorators-module"></span><h2>grandflow.io.decorators module<a class="headerlink" href="#module-grandflow.io.decorators" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="grandflow.io.decorators.deprecated">
+<code class="descclassname">grandflow.io.decorators.</code><code class="descname">deprecated</code><span class="sig-paren">(</span><em>func</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/decorators.html#deprecated"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.decorators.deprecated" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a decorator which can be used to mark functions
+as deprecated. It will result in a warning being emitted
+when the function is used.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="grandflow-io-opener-module">
+<h2>grandflow.io.opener module<a class="headerlink" href="#grandflow-io-opener-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-grandflow.io.rangeQueries">
+<span id="grandflow-io-rangequeries-module"></span><h2>grandflow.io.rangeQueries module<a class="headerlink" href="#module-grandflow.io.rangeQueries" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="grandflow.io.rangeQueries.getCoverageInRange">
+<code class="descclassname">grandflow.io.rangeQueries.</code><code class="descname">getCoverageInRange</code><span class="sig-paren">(</span><em>cmpH5</em>, <em>coords</em>, <em>rowNumbers=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/rangeQueries.html#getCoverageInRange"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.rangeQueries.getCoverageInRange" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a vector of length: coords[2] - coords[1] where each
+element represents the number of reads overlapping that position
+in the cmp.h5 file.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.io.rangeQueries.getOverlappingRanges">
+<code class="descclassname">grandflow.io.rangeQueries.</code><code class="descname">getOverlappingRanges</code><span class="sig-paren">(</span><em>tStart</em>, <em>tEnd</em>, <em>nBack</em>, <em>nOverlap</em>, <em>rangeStart</em>, <em>rangeEnd</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/rangeQueries.html#getOverlappingRanges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.rangeQueries.getOverlappingRanges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return indices overlapping the range defined by [rangeStart,
+rangeEnd). Here tStart, tEnd, nBack, nOverlap are vectors of
+length n sorted according to tStart and tEnd. The vectors nBack
+and nOverlap are typically produced by computeIndices[DP].</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.io.rangeQueries.getReadsInRange">
+<code class="descclassname">grandflow.io.rangeQueries.</code><code class="descname">getReadsInRange</code><span class="sig-paren">(</span><em>cmpH5</em>, <em>coords</em>, <em>justIndices=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/rangeQueries.html#getReadsInRange"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.rangeQueries.getReadsInRange" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return an ndarray representing the portion of the reads which
+overlap the range specfied by coords, where coords is a
+three-tuple composed of (refSeqID, rangeStart, rangeEnd).  Here,
+cmpH5 is an hdf5 object representing a pointer to a sorted cmp.h5
+file.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.io.rangeQueries.leftmostBinSearch">
+<code class="descclassname">grandflow.io.rangeQueries.</code><code class="descname">leftmostBinSearch</code><span class="sig-paren">(</span><em>vec</em>, <em>val</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/rangeQueries.html#leftmostBinSearch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.rangeQueries.leftmostBinSearch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the leftmost position in the vector vec of val. If val is
+absent then we return the lefternmost position for the value:
+max(vec[vec &lt; val]). The time complexity here is potentially worse
+than log(n) because of the extra step of walking backwards.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.io.rangeQueries.makeReadLocator">
+<code class="descclassname">grandflow.io.rangeQueries.</code><code class="descname">makeReadLocator</code><span class="sig-paren">(</span><em>cmpH5</em>, <em>refSeq</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/rangeQueries.html#makeReadLocator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.rangeQueries.makeReadLocator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a function which can be called iteratively to find reads
+quickly.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.io.rangeQueries.projectIntoRange">
+<code class="descclassname">grandflow.io.rangeQueries.</code><code class="descname">projectIntoRange</code><span class="sig-paren">(</span><em>tStart</em>, <em>tEnd</em>, <em>winStart</em>, <em>winEnd</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/rangeQueries.html#projectIntoRange"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.rangeQueries.projectIntoRange" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find coverage in the range [winStart, winEnd) implied by tStart,
+tEnd vectors.  Coverage can be most efficiently calculated by
+first obtaining all reads overlapping the range using the
+getOverlappingRanges function then projecting them into the same
+or smaller range</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.io.rangeQueries.rightmostBinSearch">
+<code class="descclassname">grandflow.io.rangeQueries.</code><code class="descname">rightmostBinSearch</code><span class="sig-paren">(</span><em>vec</em>, <em>val</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/rangeQueries.html#rightmostBinSearch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.rangeQueries.rightmostBinSearch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the rightmost position in the vector vec of val. If val is
+absent then we return the leftmost position of the value:
+min(vec[vec &gt; val]). If val is greater than all elements in vec we
+return len(vec).</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-grandflow.io.sequence">
+<span id="grandflow-io-sequence-module"></span><h2>grandflow.io.sequence module<a class="headerlink" href="#module-grandflow.io.sequence" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="grandflow.io.sequence.complement">
+<code class="descclassname">grandflow.io.sequence.</code><code class="descname">complement</code><span class="sig-paren">(</span><em>sequence</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/sequence.html#complement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.sequence.complement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the complement of a sequence</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.io.sequence.reverseComplement">
+<code class="descclassname">grandflow.io.sequence.</code><code class="descname">reverseComplement</code><span class="sig-paren">(</span><em>sequence</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/io/sequence.html#reverseComplement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.io.sequence.reverseComplement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the reverse-complement of a sequence
+NOTE: This only currently supports DNA</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-grandflow.io">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-grandflow.io" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">grandflow.io package</a><ul>
+<li><a class="reference internal" href="#subpackages">Subpackages</a></li>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-grandflow.io.BarcodeH5Reader">grandflow.io.BarcodeH5Reader module</a></li>
+<li><a class="reference internal" href="#grandflow-io-bash5io-module">grandflow.io.BasH5IO module</a></li>
+<li><a class="reference internal" href="#module-grandflow.io.FastaIO">grandflow.io.FastaIO module</a></li>
+<li><a class="reference internal" href="#module-grandflow.io.FastqIO">grandflow.io.FastqIO module</a></li>
+<li><a class="reference internal" href="#module-grandflow.io.FofnIO">grandflow.io.FofnIO module</a></li>
+<li><a class="reference internal" href="#module-grandflow.io.GffIO">grandflow.io.GffIO module</a></li>
+<li><a class="reference internal" href="#module-grandflow.io.VcfIO">grandflow.io.VcfIO module</a></li>
+<li><a class="reference internal" href="#module-grandflow.io.base">grandflow.io.base module</a></li>
+<li><a class="reference internal" href="#module-grandflow.io.decorators">grandflow.io.decorators module</a></li>
+<li><a class="reference internal" href="#grandflow-io-opener-module">grandflow.io.opener module</a></li>
+<li><a class="reference internal" href="#module-grandflow.io.rangeQueries">grandflow.io.rangeQueries module</a></li>
+<li><a class="reference internal" href="#module-grandflow.io.sequence">grandflow.io.sequence module</a></li>
+<li><a class="reference internal" href="#module-grandflow.io">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/grandflow.io.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, GrandOmics.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/grandflow.io.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,1 +1,225 @@
-../.docs/build/html/grandflow.util.html
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="cn">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>grandflow.util package &#8212; GrandFlow v0.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="grandflow-util-package">
+<h1>grandflow.util package<a class="headerlink" href="#grandflow-util-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-grandflow.util.timer">
+<span id="grandflow-util-timer-module"></span><h2>grandflow.util.timer module<a class="headerlink" href="#module-grandflow.util.timer" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="grandflow.util.timer.StageTimer">
+<em class="property">class </em><code class="descclassname">grandflow.util.timer.</code><code class="descname">StageTimer</code><a class="reference internal" href="_modules/grandflow/util/timer.html#StageTimer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.util.timer.StageTimer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Measure run times of different stages of the program</p>
+<dl class="method">
+<dt id="grandflow.util.timer.StageTimer.elapsed">
+<code class="descname">elapsed</code><span class="sig-paren">(</span><em>stage</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/util/timer.html#StageTimer.elapsed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.util.timer.StageTimer.elapsed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return total time spent in a stage, which is the sum of the time spans
+between calls to start() and stop(). If the timer is currently running,
+its current invocation is not counted.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="grandflow.util.timer.StageTimer.start">
+<code class="descname">start</code><span class="sig-paren">(</span><em>stage</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/util/timer.html#StageTimer.start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.util.timer.StageTimer.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start measuring elapsed time for a stage</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="grandflow.util.timer.StageTimer.stop">
+<code class="descname">stop</code><span class="sig-paren">(</span><em>stage</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/util/timer.html#StageTimer.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.util.timer.StageTimer.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stop measuring elapsed time for a stage.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="grandflow.util.timer.StageTimer.total">
+<code class="descname">total</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/util/timer.html#StageTimer.total"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.util.timer.StageTimer.total" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return sum of all times</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-grandflow.util">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-grandflow.util" title="Permalink to this headline">¶</a></h2>
+<p>common file</p>
+<dl class="function">
+<dt id="grandflow.util.get_basename">
+<code class="descclassname">grandflow.util.</code><code class="descname">get_basename</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/util.html#get_basename"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.util.get_basename" title="Permalink to this definition">¶</a></dt>
+<dd><p>return the path's base name without extension name</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>path (path): file path</dd>
+</dl>
+<p>Returns: base name</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.util.log">
+<code class="descclassname">grandflow.util.</code><code class="descname">log</code><span class="sig-paren">(</span><em>file_name</em>, <em>logger_name='lipidong'</em>, <em>quite=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/util.html#log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.util.log" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="grandflow.util.mkdir">
+<code class="descclassname">grandflow.util.</code><code class="descname">mkdir</code><span class="sig-paren">(</span><em>path</em>, <em>mode=511</em>, <em>dir_fd=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/util.html#mkdir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.util.mkdir" title="Permalink to this definition">¶</a></dt>
+<dd><p>creates a directory, even exists</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>path (str): path name</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.util.read_line">
+<code class="descclassname">grandflow.util.</code><code class="descname">read_line</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/util.html#read_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.util.read_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>read file line by line</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>path (str): file path</dd>
+</dl>
+<p>Returns: list</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.util.read_table">
+<code class="descclassname">grandflow.util.</code><code class="descname">read_table</code><span class="sig-paren">(</span><em>_file_name</em>, <em>comment='#'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/util.html#read_table"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.util.read_table" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">_file_name:</th><td class="field-body">file name</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.util.safe_open">
+<code class="descclassname">grandflow.util.</code><code class="descname">safe_open</code><span class="sig-paren">(</span><em>infile</em>, <em>mode</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/util.html#safe_open"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.util.safe_open" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="grandflow.util.safe_run">
+<code class="descclassname">grandflow.util.</code><code class="descname">safe_run</code><span class="sig-paren">(</span><em>shell_cmd</em>, <em>retry=3</em>, <em>has_retry=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/util.html#safe_run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.util.safe_run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="grandflow.util.str2time">
+<code class="descclassname">grandflow.util.</code><code class="descname">str2time</code><span class="sig-paren">(</span><em>string</em>, <em>f='%Y-%m-%d %H:%M:%S'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/util.html#str2time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.util.str2time" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="grandflow.util.sub_basename">
+<code class="descclassname">grandflow.util.</code><code class="descname">sub_basename</code><span class="sig-paren">(</span><em>path</em>, <em>ext</em>, <em>mid=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/util.html#sub_basename"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.util.sub_basename" title="Permalink to this definition">¶</a></dt>
+<dd><p>substitute the extension name for the path's base name</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>path (str): path
+ext (str): extension name</dd>
+</dl>
+<p>Returns: new base name</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.util.time2str">
+<code class="descclassname">grandflow.util.</code><code class="descname">time2str</code><span class="sig-paren">(</span><em>dt</em>, <em>f='%Y-%m-%d %H:%M:%S'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/util.html#time2str"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.util.time2str" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">grandflow.util package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-grandflow.util.timer">grandflow.util.timer module</a></li>
+<li><a class="reference internal" href="#module-grandflow.util">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/grandflow.util.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, GrandOmics.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/grandflow.util.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

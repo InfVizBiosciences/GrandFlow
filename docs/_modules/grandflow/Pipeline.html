@@ -1,0 +1,492 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="cn">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>grandflow.Pipeline &#8212; GrandFlow v0.0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for grandflow.Pipeline</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">make pipeline</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1"># ---------</span>
+<span class="c1"># Change Logs:</span>
+<span class="c1"># 2018-05-31</span>
+<span class="c1">#</span>
+<span class="c1"># ---------</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;Li Pidong&#39;</span>
+<span class="n">__email__</span> <span class="o">=</span> <span class="s1">&#39;lipidong@126.com&#39;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s1">&#39;0.0.1&#39;</span>
+<span class="n">__status__</span> <span class="o">=</span> <span class="s1">&#39;Dev&#39;</span>
+
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">grandflow.util</span> <span class="k">import</span> <span class="n">mkdir</span><span class="p">,</span> <span class="n">sub_basename</span>
+
+
+<span class="n">sjm_template</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">job_begin</span>
+<span class="s2">  name </span><span class="si">{name}</span><span class="s2"></span>
+<span class="s2">  memory </span><span class="si">{memory}</span><span class="s2"></span>
+<span class="s2">  sched_options -cwd -q </span><span class="si">{queue}</span><span class="s2"> -V -S /bin/bash -pe smp </span><span class="si">{thread}</span><span class="s2"></span>
+<span class="s2">  cmd_begin</span>
+<span class="s2">    </span><span class="si">{cmd}</span><span class="s2"></span>
+<span class="s2">  cmd_end</span>
+<span class="s2">job_end</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="get_config"><a class="viewcode-back" href="../../grandflow.html#grandflow.Pipeline.get_config">[docs]</a><span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="s1">&#39;yaml&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;get config from config</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        args (str): config file</span>
+<span class="sd">    Kwargs:</span>
+<span class="sd">        file_type (str): file type which can be yaml or json</span>
+
+<span class="sd">    Returns: dict</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s1">&#39;yaml&#39;</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">yaml</span>
+        <span class="n">config_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">config_file</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span>
+            <span class="n">config_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">))</span>
+
+    <span class="c1"># 如果子模块中没有paras模块的key, 则更新</span>
+    <span class="c1"># 子模块的参数优先级更高</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">config_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">!=</span> <span class="s1">&#39;paras&#39;</span><span class="p">:</span>
+            <span class="n">config_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+                <span class="n">k</span><span class="p">:</span> <span class="n">v</span>
+                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">config_dict</span><span class="p">[</span><span class="s1">&#39;paras&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="p">})</span>
+    <span class="k">return</span> <span class="n">config_dict</span></div>
+
+
+<div class="viewcode-block" id="Pipeline"><a class="viewcode-back" href="../../grandflow.html#grandflow.Pipeline.Pipeline">[docs]</a><span class="k">class</span> <span class="nc">Pipeline</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;generate the pipeline&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;init</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            path (str):</span>
+<span class="sd">              the pipeline path, default is current word directory</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">path</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_path</span> <span class="o">=</span> <span class="n">path</span>
+            <span class="n">mkdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">name</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="Pipeline.add_task"><a class="viewcode-back" href="../../grandflow.html#grandflow.Pipeline.Pipeline.add_task">[docs]</a>    <span class="k">def</span> <span class="nf">add_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">prev_task</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;add task to the pipeline</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            task (Task): task name</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">prev_task</span><span class="p">:</span>
+            <span class="n">task</span><span class="o">.</span><span class="n">set_prev_task</span><span class="p">(</span><span class="n">prev_task</span><span class="p">)</span>
+
+        <span class="n">task</span><span class="o">.</span><span class="n">abs_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">,</span> <span class="n">task</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">mkdir</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">abs_path</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Pipeline.sjm"><a class="viewcode-back" href="../../grandflow.html#grandflow.Pipeline.Pipeline.sjm">[docs]</a>    <span class="k">def</span> <span class="nf">sjm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;if output, write sjm cmd to output file, otherwise return the string of sjm</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            output (str): output file path</span>
+
+<span class="sd">        Returns: sjm string</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">order_template</span> <span class="o">=</span> <span class="s1">&#39;order </span><span class="si">{current}</span><span class="s1"> after </span><span class="si">{prev}</span><span class="s1">&#39;</span>
+        <span class="n">cmd_chunk</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">order_chunk</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">:</span>
+            <span class="n">cmd_chunk</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">sjm</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">task</span><span class="o">.</span><span class="n">prev_task</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">for</span> <span class="n">sub_name</span> <span class="ow">in</span> <span class="n">task</span><span class="o">.</span><span class="n">subnames</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">prev_sub_name</span> <span class="ow">in</span> <span class="n">task</span><span class="o">.</span><span class="n">prev_task</span><span class="o">.</span><span class="n">subnames</span><span class="p">:</span>
+                    <span class="n">order_chunk</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="n">order_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                            <span class="n">current</span><span class="o">=</span><span class="n">sub_name</span><span class="p">,</span> <span class="n">prev</span><span class="o">=</span><span class="n">prev_sub_name</span><span class="p">))</span>
+        <span class="n">cmd_chunk_str</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmd_chunk</span><span class="p">)</span>
+        <span class="n">order_chunk_str</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">order_chunk</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">output</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">cmd_chunk_str</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">order_chunk_str</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">cmd_chunk_str</span><span class="p">,</span> <span class="n">order_chunk_str</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="Pipeline.shell"><a class="viewcode-back" href="../../grandflow.html#grandflow.Pipeline.Pipeline.shell">[docs]</a>    <span class="k">def</span> <span class="nf">shell</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;if output, write the shell command line to the output,</span>
+<span class="sd">            otherwise return script string</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            output (str): output file path</span>
+
+<span class="sd">        Returns: shell script string</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cmd_chunk</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">:</span>
+            <span class="n">cmd_chunk</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">shell</span><span class="p">)</span>
+        <span class="n">cmd_chunk_str</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmd_chunk</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">output</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">cmd_chunk_str</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cmd_chunk_str</span></div></div>
+
+
+<div class="viewcode-block" id="Task"><a class="viewcode-back" href="../../grandflow.html#grandflow.Pipeline.Task">[docs]</a><span class="k">class</span> <span class="nc">Task</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;define a task including command line, parameters and previous task&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">name</span><span class="p">,</span>
+                 <span class="n">cmd</span><span class="p">,</span>
+                 <span class="n">cmd_paras</span><span class="o">=</span><span class="p">{},</span>
+                 <span class="n">sjm_paras</span><span class="o">=</span><span class="p">{},</span>
+                 <span class="n">path</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                 <span class="n">output</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                 <span class="n">prev_task</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;init</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name (str): task name</span>
+<span class="sd">            cmd (str): cmd line which can include {template}</span>
+<span class="sd">            cmd_paras (dict): cmd parameters</span>
+<span class="sd">            prev_task (Task): the previous task which sjm need</span>
+<span class="sd">            path (str): relative path of task</span>
+<span class="sd">            output (str): the path of output</span>
+<span class="sd">            sjm_paras (dict): sjm parameters</span>
+<span class="sd">            **kargs (dict): can set parameters of cmd</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cmd</span> <span class="o">=</span> <span class="n">cmd</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cmd_paras</span> <span class="o">=</span> <span class="n">cmd_paras</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_prev_task</span> <span class="o">=</span> <span class="n">prev_task</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_output</span> <span class="o">=</span> <span class="n">output</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kargs</span> <span class="o">=</span> <span class="n">kargs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sjm_paras</span> <span class="o">=</span> <span class="n">sjm_paras</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_subname_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cmd_multi_paras_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cmd_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_cmd_dict</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cmd_paras</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cmd_paras</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_kargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">subnames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;get task&#39;s subnames which will be used in the sjm script</span>
+<span class="sd">        Returns: list including subnames</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subname_list</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">output</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;TODO: Docstring for output.</span>
+
+<span class="sd">        Returns: TODO</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_output</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">xx</span><span class="p">)</span>
+                      <span class="k">for</span> <span class="n">xx</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output</span><span class="p">)</span>
+
+
+    <span class="nd">@output</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;set the output path</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            value (str): output path</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_output</span> <span class="o">=</span> <span class="n">value</span>
+
+<div class="viewcode-block" id="Task.get_cmd_dict"><a class="viewcode-back" href="../../grandflow.html#grandflow.Pipeline.Task.get_cmd_dict">[docs]</a>    <span class="k">def</span> <span class="nf">get_cmd_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns: dict including every subname and corresponding command line</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_subname_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">cmd_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">cmd_dict</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="c1"># 输入的参数dict中有包含list的，按照多个命令并行计算</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cmd_paras</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cmd_multi_paras_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+                <span class="k">if</span> <span class="n">cmd_count</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">!=</span> <span class="n">cmd_count</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s2">&quot;The number of parameters must be equal or equal to 1&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">cmd_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmd_multi_paras_dict</span><span class="p">:</span>
+            <span class="n">subname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_subname_list</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">]</span>
+            <span class="c1"># pdb.set_trace()</span>
+            <span class="n">cmd_dict</span><span class="p">[</span><span class="n">subname</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cmd</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_cmd_paras</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">cmd_dict</span>
+
+        <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cmd_multi_paras_dict</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">])):</span>
+            <span class="n">subname</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{name}</span><span class="s1">_</span><span class="si">{ii:0&gt;3d}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">,</span> <span class="n">ii</span><span class="o">=</span><span class="n">ii</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_subname_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">subname</span><span class="p">)</span>
+            <span class="n">para_dict</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cmd_paras</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmd_multi_paras_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">para_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmd_multi_paras_dict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">ii</span><span class="p">]</span>
+            <span class="n">cmd_dict</span><span class="p">[</span><span class="n">subname</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cmd</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">para_dict</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">cmd_dict</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns: task&#39;s name</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">prev_task</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns: previous task</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prev_task</span>
+
+<div class="viewcode-block" id="Task.set_prev_task"><a class="viewcode-back" href="../../grandflow.html#grandflow.Pipeline.Task.set_prev_task">[docs]</a>    <span class="k">def</span> <span class="nf">set_prev_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;set previous task</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            task (Task): Task instance</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_prev_task</span> <span class="o">=</span> <span class="n">task</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">sjm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;generate template</span>
+<span class="sd">        Returns: TODO</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sjm_cmd_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sjm_paras</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;The sjm parameters not exists&#39;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">subname</span><span class="p">,</span> <span class="n">cmd</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmd_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sjm_paras</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">subname</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sjm_paras</span><span class="p">[</span><span class="s1">&#39;cmd&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cmd</span>
+            <span class="n">sjm_cmd_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sjm_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_sjm_paras</span><span class="p">))</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sjm_cmd_list</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shell</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;generate shell script</span>
+<span class="sd">        Returns: TODO</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">shell_cmd</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">subname</span><span class="p">,</span> <span class="n">cmd</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmd_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">shell_cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;# </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">subname</span><span class="p">)</span>
+            <span class="n">shell_cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">shell_cmd</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;__str__</span>
+<span class="sd">        Returns: name</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span></div>
+
+
+<div class="viewcode-block" id="aligner"><a class="viewcode-back" href="../../grandflow.html#grandflow.Pipeline.aligner">[docs]</a><span class="k">def</span> <span class="nf">aligner</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">proj_name</span><span class="p">,</span> <span class="n">fq_list</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">ref_version</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;create aligner task</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        name (str): alinger name such as ngmlr, last</span>
+<span class="sd">        fq_list (list): the list of fastq file</span>
+
+<span class="sd">    Returns: aligner_task, merge_bam_task</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">aligner_output</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">name</span><span class="p">,</span>
+                                   <span class="n">sub_basename</span><span class="p">(</span><span class="n">xx</span><span class="p">,</span>
+                                                <span class="s1">&#39;bam&#39;</span><span class="p">,</span>
+                                                <span class="n">mid</span><span class="o">=</span><span class="s1">&#39;.</span><span class="si">%s</span><span class="s1">.</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">ref_version</span><span class="p">)))</span>
+                      <span class="k">for</span> <span class="n">xx</span> <span class="ow">in</span> <span class="n">fq_list</span><span class="p">]</span>
+
+    <span class="n">config</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+        <span class="s1">&#39;ref&#39;</span><span class="p">:</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;paras&#39;</span><span class="p">][</span><span class="n">ref_version</span><span class="p">],</span>
+        <span class="s1">&#39;fq&#39;</span><span class="p">:</span> <span class="n">fq_list</span><span class="p">,</span>
+        <span class="s1">&#39;output&#39;</span><span class="p">:</span> <span class="n">aligner_output</span>
+<span class="p">})</span>
+
+    <span class="n">aligner_task</span> <span class="o">=</span> <span class="n">Task</span><span class="p">(</span>
+        <span class="n">name</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s1">&#39;cmd&#39;</span><span class="p">],</span>
+        <span class="n">cmd_paras</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="n">name</span><span class="p">],</span>
+        <span class="n">sjm_paras</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="n">name</span><span class="p">],</span>
+        <span class="n">path</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="c1"># merge bam</span>
+    <span class="n">merge_bam_output</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">.</span><span class="si">%s</span><span class="s1">.merge.bam&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">proj_name</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
+    <span class="n">config</span><span class="p">[</span><span class="s1">&#39;merge_bam&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+        <span class="s1">&#39;input_list&#39;</span><span class="p">:</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">aligner_output</span><span class="p">),</span>
+        <span class="s1">&#39;output&#39;</span><span class="p">:</span><span class="n">merge_bam_output</span>
+    <span class="p">})</span>
+    <span class="n">merge_bam_task</span> <span class="o">=</span> <span class="n">Task</span><span class="p">(</span>
+        <span class="s1">&#39;merge_bam&#39;</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;merge_bam&#39;</span><span class="p">][</span><span class="s1">&#39;cmd&#39;</span><span class="p">],</span>
+        <span class="n">cmd_paras</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;merge_bam&#39;</span><span class="p">],</span>
+        <span class="n">sjm_paras</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;merge_bam&#39;</span><span class="p">],</span>
+        <span class="n">output</span><span class="o">=</span><span class="n">merge_bam_output</span>
+    <span class="p">)</span>
+    <span class="c1"># merge_bam.output = &#39;merge.bam&#39;</span>
+
+    <span class="k">return</span> <span class="n">aligner_task</span><span class="p">,</span> <span class="n">merge_bam_task</span></div>
+
+
+<div class="viewcode-block" id="sv_caller"><a class="viewcode-back" href="../../grandflow.html#grandflow.Pipeline.sv_caller">[docs]</a><span class="k">def</span> <span class="nf">sv_caller</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">proj_name</span><span class="p">,</span> <span class="n">input_bam</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; sv_caller.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        name (TODO): the name of sv caller</span>
+<span class="sd">        proj_name (str): project name</span>
+<span class="sd">        input_bam (str): input bam</span>
+<span class="sd">        config (dict): config</span>
+
+<span class="sd">    Returns: sv caller task</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_bam</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">sv_caller_output</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">name</span><span class="p">,</span>
+                                         <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">.</span><span class="si">%s</span><span class="s1">.vcf&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">proj_name</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span> <span class="k">for</span> <span class="n">xx</span> <span class="ow">in</span> <span class="n">input_bam</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">sv_caller_output</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">.</span><span class="si">%s</span><span class="s1">.vcf&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">proj_name</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="p">)</span>
+
+    <span class="n">config</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+        <span class="s1">&#39;bam&#39;</span><span class="p">:</span> <span class="n">input_bam</span><span class="p">,</span>
+        <span class="s1">&#39;output&#39;</span><span class="p">:</span> <span class="n">sv_caller_output</span>
+    <span class="p">})</span>
+    <span class="n">sv_caller_task</span> <span class="o">=</span> <span class="n">Task</span><span class="p">(</span>
+        <span class="n">name</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s1">&#39;cmd&#39;</span><span class="p">],</span>
+        <span class="n">cmd_paras</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="n">name</span><span class="p">],</span>
+        <span class="n">sjm_paras</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="n">name</span><span class="p">],</span>
+        <span class="n">path</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">output</span><span class="o">=</span><span class="n">sv_caller_output</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">sv_caller_task</span></div>
+
+
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../grandflow.html#grandflow.Pipeline.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Pipeline Moudle&#39;</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, GrandOmics.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

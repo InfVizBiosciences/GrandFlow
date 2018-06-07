@@ -1,1 +1,295 @@
-../.docs/build/html/grandflow.plot.html
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="cn">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>grandflow.plot package &#8212; GrandFlow v0.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="grandflow-plot-package">
+<h1>grandflow.plot package<a class="headerlink" href="#grandflow-plot-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-grandflow.plot.plot">
+<span id="grandflow-plot-plot-module"></span><h2>grandflow.plot.plot module<a class="headerlink" href="#module-grandflow.plot.plot" title="Permalink to this headline">¶</a></h2>
+<p>This module provides functions for plotting data extracted from Oxford Nanopore sequencing
+reads and alignments, but some of it's functions can also be used for other applications.</p>
+<p>FUNCTIONS
+* Check if a specified color is a valid matplotlib color
+check_valid_color(color)
+* Check if a specified output format is valid
+checkvalidFormat(format)
+* Create a bivariate plot with dots, hexbins and/or kernel density estimates.
+Also arguments for specifying axis names, color and xlim/ylim
+scatter(x, y, names, path, color, format, plots, stat=None, log=False, minvalx=0, minvaly=0)
+* Create cumulative yield plot and evaluate read length and quality over time
+timePlots(df, path, color, format)
+* Create length distribution histogram and density curve
+lengthPlots(array, name, path, n50, color, format, log=False)
+* Create flowcell physical layout in numpy array
+makeLayout()
+* Present the activity (number of reads) per channel on the flowcell as a heatmap
+spatialHeatmap(array, title, path, color, format)</p>
+<dl class="class">
+<dt id="grandflow.plot.plot.Layout">
+<em class="property">class </em><code class="descclassname">grandflow.plot.plot.</code><code class="descname">Layout</code><span class="sig-paren">(</span><em>structure</em>, <em>template</em>, <em>xticks</em>, <em>yticks</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/plot/plot.html#Layout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.plot.plot.Layout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="grandflow.plot.plot.Plot">
+<em class="property">class </em><code class="descclassname">grandflow.plot.plot.</code><code class="descname">Plot</code><span class="sig-paren">(</span><em>path</em>, <em>title</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/plot/plot.html#Plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.plot.plot.Plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>A Plot object is defined by a path to the output file and the title of the plot.</p>
+<dl class="method">
+<dt id="grandflow.plot.plot.Plot.encode">
+<code class="descname">encode</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/plot/plot.html#Plot.encode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.plot.plot.Plot.encode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="grandflow.plot.plot.Plot.encode1">
+<code class="descname">encode1</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/plot/plot.html#Plot.encode1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.plot.plot.Plot.encode1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the base64 encoding of the figure file and insert in html image tag.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="grandflow.plot.plot.Plot.encode2">
+<code class="descname">encode2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/plot/plot.html#Plot.encode2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.plot.plot.Plot.encode2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the base64 encoding of the fig attribute and insert in html image tag.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.plot.plot.check_valid_color">
+<code class="descclassname">grandflow.plot.plot.</code><code class="descname">check_valid_color</code><span class="sig-paren">(</span><em>color</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/plot/plot.html#check_valid_color"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.plot.plot.check_valid_color" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the color provided by the user is valid.</p>
+<p>If color is invalid the default is returned.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.plot.plot.check_valid_format">
+<code class="descclassname">grandflow.plot.plot.</code><code class="descname">check_valid_format</code><span class="sig-paren">(</span><em>figformat</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/plot/plot.html#check_valid_format"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.plot.plot.check_valid_format" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the specified figure format is valid.</p>
+<p>If format is invalid the default is returned.
+Probably installation-dependent</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.plot.plot.check_valid_time_and_sort">
+<code class="descclassname">grandflow.plot.plot.</code><code class="descname">check_valid_time_and_sort</code><span class="sig-paren">(</span><em>df</em>, <em>timescol</em>, <em>days=5</em>, <em>warning=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/plot/plot.html#check_valid_time_and_sort"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.plot.plot.check_valid_time_and_sort" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the data contains reads created within the same <cite>days</cite> timeframe.</p>
+<p>if not, print warning and only return part of the data which is within <cite>days</cite> days
+Resetting the index twice to get also an &quot;index&quot; column for plotting the cum_yield_reads plot</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.plot.plot.checkvalidColor">
+<code class="descclassname">grandflow.plot.plot.</code><code class="descname">checkvalidColor</code><span class="sig-paren">(</span><em>color</em><span class="sig-paren">)</span><a class="headerlink" href="#grandflow.plot.plot.checkvalidColor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the color provided by the user is valid.</p>
+<p>If color is invalid the default is returned.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.plot.plot.checkvalidFormat">
+<code class="descclassname">grandflow.plot.plot.</code><code class="descname">checkvalidFormat</code><span class="sig-paren">(</span><em>figformat</em><span class="sig-paren">)</span><a class="headerlink" href="#grandflow.plot.plot.checkvalidFormat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the specified figure format is valid.</p>
+<p>If format is invalid the default is returned.
+Probably installation-dependent</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.plot.plot.compare_cumulative_yields">
+<code class="descclassname">grandflow.plot.plot.</code><code class="descname">compare_cumulative_yields</code><span class="sig-paren">(</span><em>df</em>, <em>path</em>, <em>palette=None</em>, <em>title=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/plot/plot.html#compare_cumulative_yields"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.plot.plot.compare_cumulative_yields" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="grandflow.plot.plot.cumulative_yield">
+<code class="descclassname">grandflow.plot.plot.</code><code class="descname">cumulative_yield</code><span class="sig-paren">(</span><em>dfs</em>, <em>path</em>, <em>figformat</em>, <em>title</em>, <em>color</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/plot/plot.html#cumulative_yield"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.plot.plot.cumulative_yield" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="grandflow.plot.plot.lengthPlots">
+<code class="descclassname">grandflow.plot.plot.</code><code class="descname">lengthPlots</code><span class="sig-paren">(</span><em>array</em>, <em>name</em>, <em>path</em>, <em>title=None</em>, <em>n50=None</em>, <em>color='#4CB391'</em>, <em>figformat='png'</em>, <em>binsize=100</em><span class="sig-paren">)</span><a class="headerlink" href="#grandflow.plot.plot.lengthPlots" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create histogram of read lengths.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.plot.plot.length_plots">
+<code class="descclassname">grandflow.plot.plot.</code><code class="descname">length_plots</code><span class="sig-paren">(</span><em>array</em>, <em>name</em>, <em>path</em>, <em>title=None</em>, <em>n50=None</em>, <em>color='#4CB391'</em>, <em>figformat='png'</em>, <em>binsize=100</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/plot/plot.html#length_plots"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.plot.plot.length_plots" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create histogram of read lengths.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.plot.plot.make_layout">
+<code class="descclassname">grandflow.plot.plot.</code><code class="descname">make_layout</code><span class="sig-paren">(</span><em>maxval</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/plot/plot.html#make_layout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.plot.plot.make_layout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make the physical layout of the MinION flowcell.
+based on <a class="reference external" href="https://bioinformatics.stackexchange.com/a/749/681">https://bioinformatics.stackexchange.com/a/749/681</a>
+returned as a numpy array</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.plot.plot.output_barplot">
+<code class="descclassname">grandflow.plot.plot.</code><code class="descname">output_barplot</code><span class="sig-paren">(</span><em>df</em>, <em>figformat</em>, <em>path</em>, <em>title=None</em>, <em>palette=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/plot/plot.html#output_barplot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.plot.plot.output_barplot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create barplots based on number of reads and total sum of nucleotides sequenced.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.plot.plot.overlay_histogram">
+<code class="descclassname">grandflow.plot.plot.</code><code class="descname">overlay_histogram</code><span class="sig-paren">(</span><em>df</em>, <em>path</em>, <em>palette=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/plot/plot.html#overlay_histogram"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.plot.plot.overlay_histogram" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use plotly to create an overlay of length histograms
+Return html code</p>
+<p>Only has 10 colors, which get recycled up to 5 times.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.plot.plot.run_tests">
+<code class="descclassname">grandflow.plot.plot.</code><code class="descname">run_tests</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/plot/plot.html#run_tests"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.plot.plot.run_tests" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="grandflow.plot.plot.scatter">
+<code class="descclassname">grandflow.plot.plot.</code><code class="descname">scatter</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>names</em>, <em>path</em>, <em>plots</em>, <em>color='#4CB391'</em>, <em>figformat='png'</em>, <em>stat=None</em>, <em>log=False</em>, <em>minvalx=0</em>, <em>minvaly=0</em>, <em>title=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/plot/plot.html#scatter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.plot.plot.scatter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create bivariate plots.</p>
+<p>Create four types of bivariate plots of x vs y, containing marginal summaries
+-A scatter plot with histograms on axes
+-A hexagonal binned plot with histograms on axes
+-A kernel density plot with density curves on axes
+-A pauvre-style plot using code from <a class="reference external" href="https://github.com/conchoecia/pauvre">https://github.com/conchoecia/pauvre</a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.plot.plot.spatialHeatmap">
+<code class="descclassname">grandflow.plot.plot.</code><code class="descname">spatialHeatmap</code><span class="sig-paren">(</span><em>array</em>, <em>path</em>, <em>title=None</em>, <em>color='Greens'</em>, <em>figformat='png'</em><span class="sig-paren">)</span><a class="headerlink" href="#grandflow.plot.plot.spatialHeatmap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Taking channel information and creating post run channel activity plots.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.plot.plot.spatial_heatmap">
+<code class="descclassname">grandflow.plot.plot.</code><code class="descname">spatial_heatmap</code><span class="sig-paren">(</span><em>array</em>, <em>path</em>, <em>title=None</em>, <em>color='Greens'</em>, <em>figformat='png'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/plot/plot.html#spatial_heatmap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.plot.plot.spatial_heatmap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Taking channel information and creating post run channel activity plots.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.plot.plot.timePlots">
+<code class="descclassname">grandflow.plot.plot.</code><code class="descname">timePlots</code><span class="sig-paren">(</span><em>df</em>, <em>path</em>, <em>title=None</em>, <em>color='#4CB391'</em>, <em>figformat='png'</em><span class="sig-paren">)</span><a class="headerlink" href="#grandflow.plot.plot.timePlots" title="Permalink to this definition">¶</a></dt>
+<dd><p>Making plots of time vs read length, time vs quality and cumulative yield.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.plot.plot.time_plots">
+<code class="descclassname">grandflow.plot.plot.</code><code class="descname">time_plots</code><span class="sig-paren">(</span><em>df</em>, <em>path</em>, <em>title=None</em>, <em>color='#4CB391'</em>, <em>figformat='png'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/plot/plot.html#time_plots"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.plot.plot.time_plots" title="Permalink to this definition">¶</a></dt>
+<dd><p>Making plots of time vs read length, time vs quality and cumulative yield.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.plot.plot.violin_or_box_plot">
+<code class="descclassname">grandflow.plot.plot.</code><code class="descname">violin_or_box_plot</code><span class="sig-paren">(</span><em>df</em>, <em>y</em>, <em>figformat</em>, <em>path</em>, <em>y_name</em>, <em>title=None</em>, <em>violin=True</em>, <em>log=False</em>, <em>palette=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/plot/plot.html#violin_or_box_plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.plot.plot.violin_or_box_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a violin or boxplot from the received DataFrame.</p>
+<p>The x-axis should be divided based on the 'dataset' column,
+the y-axis is specified in the arguments</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="grandflow.plot.plot.violin_plots_over_time">
+<code class="descclassname">grandflow.plot.plot.</code><code class="descname">violin_plots_over_time</code><span class="sig-paren">(</span><em>dfs</em>, <em>path</em>, <em>figformat</em>, <em>title</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/plot/plot.html#violin_plots_over_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.plot.plot.violin_plots_over_time" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="grandflow.plot.plot.yield_by_minimal_length_plot">
+<code class="descclassname">grandflow.plot.plot.</code><code class="descname">yield_by_minimal_length_plot</code><span class="sig-paren">(</span><em>array</em>, <em>name</em>, <em>path</em>, <em>title=None</em>, <em>n50=None</em>, <em>color='#4CB391'</em>, <em>figformat='png'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grandflow/plot/plot.html#yield_by_minimal_length_plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grandflow.plot.plot.yield_by_minimal_length_plot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-grandflow.plot">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-grandflow.plot" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">grandflow.plot package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-grandflow.plot.plot">grandflow.plot.plot module</a></li>
+<li><a class="reference internal" href="#module-grandflow.plot">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/grandflow.plot.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, GrandOmics.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/grandflow.plot.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

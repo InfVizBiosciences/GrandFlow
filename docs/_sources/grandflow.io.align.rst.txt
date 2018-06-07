@@ -1,0 +1,54 @@
+grandflow.io.align package
+==========================
+
+Submodules
+----------
+
+grandflow.io.align.BamAlignment module
+--------------------------------------
+
+.. automodule:: grandflow.io.align.BamAlignment
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+grandflow.io.align.BamIO module
+-------------------------------
+
+.. automodule:: grandflow.io.align.BamIO
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+grandflow.io.align.BlasrIO module
+---------------------------------
+
+.. automodule:: grandflow.io.align.BlasrIO
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+grandflow.io.align.CmpH5IO module
+---------------------------------
+
+.. automodule:: grandflow.io.align.CmpH5IO
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+grandflow.io.align.PacBioBamIndex module
+----------------------------------------
+
+.. automodule:: grandflow.io.align.PacBioBamIndex
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: grandflow.io.align
+    :members:
+    :undoc-members:
+    :show-inheritance:

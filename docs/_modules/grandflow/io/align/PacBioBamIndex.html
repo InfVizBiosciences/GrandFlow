@@ -1,0 +1,292 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="cn">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>grandflow.io.align.PacBioBamIndex &#8212; GrandFlow v0.0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for grandflow.io.align.PacBioBamIndex</h1><div class="highlight"><pre>
+<span></span><span class="c1">#coding = utf-8</span>
+
+<span class="c1"># Author: David Alexander</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span>
+
+<span class="kn">from</span> <span class="nn">os.path</span> <span class="k">import</span> <span class="n">abspath</span><span class="p">,</span> <span class="n">expanduser</span>
+<span class="kn">from</span> <span class="nn">._bgzf</span> <span class="k">import</span> <span class="n">BgzfReader</span>
+<span class="kn">from</span> <span class="nn">struct</span> <span class="k">import</span> <span class="n">unpack</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numpy.lib.recfunctions</span> <span class="k">as</span> <span class="nn">nlr</span>
+
+<span class="kn">from</span> <span class="nn">._BamSupport</span> <span class="k">import</span> <span class="n">IncompatibleFile</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;PacBioBamIndex&quot;</span> <span class="p">]</span>
+
+
+<span class="n">PBI_HEADER_LEN</span>              <span class="o">=</span> <span class="mi">32</span>
+
+<span class="n">PBI_FLAGS_BASIC</span>             <span class="o">=</span> <span class="mi">0</span>
+<span class="n">PBI_FLAGS_MAPPED</span>            <span class="o">=</span> <span class="mi">1</span>
+<span class="n">PBI_FLAGS_COORDINATE_SORTED</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">PBI_FLAGS_BARCODE</span>           <span class="o">=</span> <span class="mi">4</span>
+
+
+<div class="viewcode-block" id="PacBioBamIndex"><a class="viewcode-back" href="../../../../grandflow.io.align.html#grandflow.io.align.PacBioBamIndex.PacBioBamIndex">[docs]</a><span class="k">class</span> <span class="nc">PacBioBamIndex</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The PacBio BAM index is a companion file allowing modest</span>
+<span class="sd">    *semantic* queries on PacBio BAM files without iterating over the</span>
+<span class="sd">    entire file.  By convention, the PacBio BAM index has extension</span>
+<span class="sd">    &quot;bam.pbi&quot;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_loadHeader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+        <span class="n">buf</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">PBI_HEADER_LEN</span><span class="p">)</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;&lt; 4s BBBx H I 18x&quot;</span><span class="p">,</span> <span class="n">buf</span><span class="p">)</span>
+        <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">magic</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vPatch</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vMinor</span><span class="p">,</span>
+         <span class="bp">self</span><span class="o">.</span><span class="n">vMajor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pbiFlags</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nReads</span><span class="p">)</span> <span class="o">=</span> <span class="n">header</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vMajor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vMinor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vPatch</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">IncompatibleFile</span><span class="p">(</span>
+                <span class="s2">&quot;This PBI file is incompatible with this API &quot;</span>
+                <span class="s2">&quot;(only PacBio PBI files version &gt;= 3.0.1 are supported)&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">hasMappingInfo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># N.B.: Or&#39;ing in (nReads==0) is HACKish fix for issue with</span>
+        <span class="c1"># empty mapped BAM files---the &quot;Mapped&quot; bit doesn&#39;t get set</span>
+        <span class="c1"># correctly in pbi_flags if the file is empty. So in the empty</span>
+        <span class="c1"># file case, assume it may be mapped.  The downside is we</span>
+        <span class="c1"># don&#39;t get an exception on attempting to access the mapped</span>
+        <span class="c1"># columns for empty unmapped BAM pbis.  Not a big deal, I</span>
+        <span class="c1"># suppose</span>
+        <span class="k">return</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">nReads</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span>
+                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pbiFlags</span> <span class="o">&amp;</span> <span class="n">PBI_FLAGS_MAPPED</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">hasCoordinateSortedInfo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pbiFlags</span> <span class="o">&amp;</span> <span class="n">PBI_FLAGS_COORDINATE_SORTED</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">hasBarcodeInfo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pbiFlags</span> <span class="o">&amp;</span> <span class="n">PBI_FLAGS_BARCODE</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_loadMainIndex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+        <span class="c1"># Main index holds basic, mapping, and barcode info</span>
+        <span class="n">BASIC_INDEX_DTYPE</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="s2">&quot;qId&quot;</span>               <span class="p">,</span> <span class="s2">&quot;i4&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;qStart&quot;</span>            <span class="p">,</span> <span class="s2">&quot;i4&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;qEnd&quot;</span>              <span class="p">,</span> <span class="s2">&quot;i4&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;holeNumber&quot;</span>        <span class="p">,</span> <span class="s2">&quot;i4&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;readQual&quot;</span>          <span class="p">,</span> <span class="s2">&quot;f4&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;contextFlag&quot;</span>       <span class="p">,</span> <span class="s2">&quot;u1&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;virtualFileOffset&quot;</span> <span class="p">,</span> <span class="s2">&quot;i8&quot;</span><span class="p">)</span> <span class="p">]</span>
+
+        <span class="n">MAPPING_INDEX_DTYPE</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="s2">&quot;tId&quot;</span>               <span class="p">,</span> <span class="s2">&quot;i4&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;tStart&quot;</span>            <span class="p">,</span> <span class="s2">&quot;u4&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;tEnd&quot;</span>              <span class="p">,</span> <span class="s2">&quot;u4&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;aStart&quot;</span>            <span class="p">,</span> <span class="s2">&quot;u4&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;aEnd&quot;</span>              <span class="p">,</span> <span class="s2">&quot;u4&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;isReverseStrand&quot;</span>   <span class="p">,</span> <span class="s2">&quot;u1&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;nM&quot;</span>                <span class="p">,</span> <span class="s2">&quot;u4&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;nMM&quot;</span>               <span class="p">,</span> <span class="s2">&quot;u4&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;mapQV&quot;</span>             <span class="p">,</span> <span class="s2">&quot;u1&quot;</span><span class="p">)</span> <span class="p">]</span>
+
+        <span class="n">COORDINATE_SORTED_DTYPE</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="s2">&quot;tId&quot;</span>               <span class="p">,</span> <span class="s2">&quot;u4&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;beginRow&quot;</span>          <span class="p">,</span> <span class="s2">&quot;u4&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;endRow&quot;</span>            <span class="p">,</span> <span class="s2">&quot;u4&quot;</span><span class="p">)]</span>
+
+        <span class="n">BARCODE_INDEX_DTYPE</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="s2">&quot;bcForward&quot;</span>         <span class="p">,</span> <span class="s2">&quot;i2&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;bcReverse&quot;</span>         <span class="p">,</span> <span class="s2">&quot;i2&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;bcQual&quot;</span>            <span class="p">,</span> <span class="s2">&quot;i1&quot;</span><span class="p">)]</span>
+
+        <span class="n">COMPUTED_COLUMNS_DTYPE</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="s2">&quot;nIns&quot;</span>              <span class="p">,</span> <span class="s2">&quot;u4&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;nDel&quot;</span>              <span class="p">,</span> <span class="s2">&quot;u4&quot;</span><span class="p">)</span> <span class="p">]</span>
+
+        <span class="n">joint_dtype</span> <span class="o">=</span> <span class="n">BASIC_INDEX_DTYPE</span><span class="p">[:]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasMappingInfo</span><span class="p">:</span>
+            <span class="n">joint_dtype</span> <span class="o">+=</span> <span class="n">MAPPING_INDEX_DTYPE</span>
+            <span class="n">joint_dtype</span> <span class="o">+=</span> <span class="n">COMPUTED_COLUMNS_DTYPE</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasBarcodeInfo</span><span class="p">:</span>
+            <span class="n">joint_dtype</span> <span class="o">+=</span> <span class="n">BARCODE_INDEX_DTYPE</span>
+        <span class="n">tbl</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nReads</span><span class="p">,),</span>
+                       <span class="n">dtype</span><span class="o">=</span><span class="n">joint_dtype</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">recarray</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">peek</span><span class="p">(</span><span class="n">type_</span><span class="p">,</span> <span class="n">length</span><span class="p">):</span>
+            <span class="n">flavor</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="n">type_</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">length</span><span class="o">*</span><span class="nb">int</span><span class="p">(</span><span class="n">width</span><span class="p">)),</span> <span class="s2">&quot;&lt;&quot;</span> <span class="o">+</span> <span class="n">type_</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="c1"># BASIC data always present</span>
+            <span class="k">for</span> <span class="n">columnName</span><span class="p">,</span> <span class="n">columnType</span> <span class="ow">in</span> <span class="n">BASIC_INDEX_DTYPE</span><span class="p">:</span>
+                <span class="n">tbl</span><span class="p">[</span><span class="n">columnName</span><span class="p">]</span> <span class="o">=</span> <span class="n">peek</span><span class="p">(</span><span class="n">columnType</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nReads</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasMappingInfo</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">columnName</span><span class="p">,</span> <span class="n">columnType</span> <span class="ow">in</span> <span class="n">MAPPING_INDEX_DTYPE</span><span class="p">:</span>
+                <span class="n">tbl</span><span class="p">[</span><span class="n">columnName</span><span class="p">]</span> <span class="o">=</span> <span class="n">peek</span><span class="p">(</span><span class="n">columnType</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nReads</span><span class="p">)</span>
+
+            <span class="c1"># Computed columns</span>
+            <span class="n">tbl</span><span class="o">.</span><span class="n">nIns</span> <span class="o">=</span> <span class="n">tbl</span><span class="o">.</span><span class="n">aEnd</span> <span class="o">-</span> <span class="n">tbl</span><span class="o">.</span><span class="n">aStart</span> <span class="o">-</span> <span class="n">tbl</span><span class="o">.</span><span class="n">nM</span> <span class="o">-</span> <span class="n">tbl</span><span class="o">.</span><span class="n">nMM</span>
+            <span class="n">tbl</span><span class="o">.</span><span class="n">nDel</span> <span class="o">=</span> <span class="n">tbl</span><span class="o">.</span><span class="n">tEnd</span> <span class="o">-</span> <span class="n">tbl</span><span class="o">.</span><span class="n">tStart</span> <span class="o">-</span> <span class="n">tbl</span><span class="o">.</span><span class="n">nM</span> <span class="o">-</span> <span class="n">tbl</span><span class="o">.</span><span class="n">nMM</span>
+
+        <span class="c1"># TODO: do something with these:</span>
+        <span class="c1"># TODO: remove nReads check when the rest of this code can handle empty</span>
+        <span class="c1"># mapped bam files (columns are missing, flags don&#39;t reflect that)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasCoordinateSortedInfo</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">nReads</span><span class="p">:</span>
+            <span class="n">ntId</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">peek</span><span class="p">(</span><span class="s2">&quot;u4&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">columnName</span><span class="p">,</span> <span class="n">columnType</span> <span class="ow">in</span> <span class="n">COORDINATE_SORTED_DTYPE</span><span class="p">:</span>
+                <span class="n">peek</span><span class="p">(</span><span class="n">columnType</span><span class="p">,</span> <span class="n">ntId</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasBarcodeInfo</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">columnName</span><span class="p">,</span> <span class="n">columnType</span> <span class="ow">in</span> <span class="n">BARCODE_INDEX_DTYPE</span><span class="p">:</span>
+                <span class="n">tbl</span><span class="p">[</span><span class="n">columnName</span><span class="p">]</span> <span class="o">=</span> <span class="n">peek</span><span class="p">(</span><span class="n">columnType</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nReads</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tbl</span> <span class="o">=</span> <span class="n">tbl</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_checkForBrokenColumns</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_loadOffsets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pbiFlags</span> <span class="o">&amp;</span> <span class="n">PBI_FLAGS_COORDINATE_SORTED</span><span class="p">):</span>
+            <span class="c1"># TODO!</span>
+            <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pbiFilename</span><span class="p">):</span>
+        <span class="n">pbiFilename</span> <span class="o">=</span> <span class="n">abspath</span><span class="p">(</span><span class="n">expanduser</span><span class="p">(</span><span class="n">pbiFilename</span><span class="p">))</span>
+        <span class="k">with</span> <span class="n">BgzfReader</span><span class="p">(</span><span class="n">pbiFilename</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_loadHeader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_loadMainIndex</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_loadOffsets</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;Malformed bam.pbi file: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">version</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vMajor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vMinor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vPatch</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">columnNames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tbl</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">columnName</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">columnName</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">columnNames</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tbl</span><span class="p">[</span><span class="n">columnName</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;pbi has no column named &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">columnName</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rowNumber</span><span class="p">):</span>
+        <span class="c1"># We do this dance to get a useable recarray slice--to</span>
+        <span class="c1"># work around https://github.com/numpy/numpy/issues/3581</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">rowNumber</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Unimplemented!&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">rec</span><span class="o">.</span><span class="n">fromrecords</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_tbl</span><span class="p">[</span><span class="n">rowNumber</span><span class="p">]],</span>
+                                  <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_tbl</span><span class="o">.</span><span class="n">dtype</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__dir__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Special magic for IPython tab completion</span>
+        <span class="n">basicDir</span> <span class="o">=</span> <span class="nb">dir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">basicDir</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">columnNames</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tbl</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)):</span>
+            <span class="k">yield</span> <span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+<div class="viewcode-block" id="PacBioBamIndex.rangeQuery"><a class="viewcode-back" href="../../../../grandflow.io.align.html#grandflow.io.align.PacBioBamIndex.PacBioBamIndex.rangeQuery">[docs]</a>    <span class="k">def</span> <span class="nf">rangeQuery</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">winId</span><span class="p">,</span> <span class="n">winStart</span><span class="p">,</span> <span class="n">winEnd</span><span class="p">):</span>
+        <span class="c1">#</span>
+        <span class="c1"># A read overlaps the window if winId == tid and</span>
+        <span class="c1">#</span>
+        <span class="c1">#  (tStart &lt; winEnd) &amp;&amp; (tEnd &gt; winStart)     (1)</span>
+        <span class="c1">#</span>
+        <span class="c1"># We are presently doing this naively right now, just</span>
+        <span class="c1"># computing the predicate over all rows. If/when we determine</span>
+        <span class="c1"># this is too slow, we can accelerate using the nBackread</span>
+        <span class="c1"># approach we use int he cmph5, doing binary search to</span>
+        <span class="c1"># identify a candidate range and then culling the range.</span>
+        <span class="c1">#</span>
+        <span class="n">ix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">tId</span>    <span class="o">==</span> <span class="n">winId</span><span class="p">)</span>  <span class="o">&amp;</span>
+                            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tStart</span>  <span class="o">&lt;</span> <span class="n">winEnd</span><span class="p">)</span> <span class="o">&amp;</span>
+                            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tEnd</span>    <span class="o">&gt;</span> <span class="n">winStart</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">ix</span></div>
+
+    <span class="k">def</span> <span class="nf">_checkForBrokenColumns</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">pbiFlags</span> <span class="o">&amp;</span> <span class="n">PBI_FLAGS_MAPPED</span><span class="p">)</span> <span class="ow">and</span>
+            <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span>  <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">nM</span>  <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nMM</span> <span class="o">==</span> <span class="mi">0</span><span class="p">))):</span>
+            <span class="k">raise</span> <span class="n">IncompatibleFile</span><span class="p">(</span><span class="s2">&quot;This bam.pbi file was generated by a version of pbindex with&quot;</span> \
+                <span class="s2">&quot; a bug.  Please rerun pbindex.&quot;</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, GrandOmics.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

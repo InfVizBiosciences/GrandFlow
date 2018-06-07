@@ -1,0 +1,853 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="cn">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>grandflow.plot.plot &#8212; GrandFlow v0.0.1 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for grandflow.plot.plot</h1><div class="highlight"><pre>
+<span></span><span class="c1"># wdecoster</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module provides functions for plotting data extracted from Oxford Nanopore sequencing</span>
+<span class="sd">reads and alignments, but some of it&#39;s functions can also be used for other applications.</span>
+
+
+<span class="sd">FUNCTIONS</span>
+<span class="sd">* Check if a specified color is a valid matplotlib color</span>
+<span class="sd">check_valid_color(color)</span>
+<span class="sd">* Check if a specified output format is valid</span>
+<span class="sd">checkvalidFormat(format)</span>
+<span class="sd">* Create a bivariate plot with dots, hexbins and/or kernel density estimates.</span>
+<span class="sd">Also arguments for specifying axis names, color and xlim/ylim</span>
+<span class="sd">scatter(x, y, names, path, color, format, plots, stat=None, log=False, minvalx=0, minvaly=0)</span>
+<span class="sd">* Create cumulative yield plot and evaluate read length and quality over time</span>
+<span class="sd">timePlots(df, path, color, format)</span>
+<span class="sd">* Create length distribution histogram and density curve</span>
+<span class="sd">lengthPlots(array, name, path, n50, color, format, log=False)</span>
+<span class="sd">* Create flowcell physical layout in numpy array</span>
+<span class="sd">makeLayout()</span>
+<span class="sd">* Present the activity (number of reads) per channel on the flowcell as a heatmap</span>
+<span class="sd">spatialHeatmap(array, title, path, color, format)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">timedelta</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">base64</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">ceil</span>
+<span class="kn">import</span> <span class="nn">io</span>
+<span class="kn">import</span> <span class="nn">urllib</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">namedtuple</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;Agg&#39;</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="k">import</span> <span class="n">colors</span> <span class="k">as</span> <span class="n">mcolors</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+<span class="kn">from</span> <span class="nn">pauvre.marginplot</span> <span class="k">import</span> <span class="n">margin_plot</span>
+<span class="c1"># import plotly</span>
+<span class="c1"># import plotly.graph_objs as go</span>
+
+
+<div class="viewcode-block" id="Plot"><a class="viewcode-back" href="../../../grandflow.plot.html#grandflow.plot.plot.Plot">[docs]</a><span class="k">class</span> <span class="nc">Plot</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A Plot object is defined by a path to the output file and the title of the plot.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">title</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fig</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">html</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="Plot.encode"><a class="viewcode-back" href="../../../grandflow.plot.html#grandflow.plot.plot.Plot.encode">[docs]</a>    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">html</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">html</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">encode2</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">encode1</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Plot.encode1"><a class="viewcode-back" href="../../../grandflow.plot.html#grandflow.plot.plot.Plot.encode1">[docs]</a>    <span class="k">def</span> <span class="nf">encode1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the base64 encoding of the figure file and insert in html image tag.&quot;&quot;&quot;</span>
+        <span class="n">data_uri</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;img src=&quot;data:image/png;base64,</span><span class="si">{0}</span><span class="s1">&quot;&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">data_uri</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Plot.encode2"><a class="viewcode-back" href="../../../grandflow.plot.html#grandflow.plot.plot.Plot.encode2">[docs]</a>    <span class="k">def</span> <span class="nf">encode2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the base64 encoding of the fig attribute and insert in html image tag.&quot;&quot;&quot;</span>
+        <span class="n">buf</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;png&#39;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+        <span class="n">buf</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">string</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">buf</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;img src=&quot;data:image/png;base64,</span><span class="si">{0}</span><span class="s1">&quot;&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">string</span><span class="p">))</span></div></div>
+
+
+<div class="viewcode-block" id="Layout"><a class="viewcode-back" href="../../../grandflow.plot.html#grandflow.plot.plot.Layout">[docs]</a><span class="k">class</span> <span class="nc">Layout</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">structure</span><span class="p">,</span> <span class="n">template</span><span class="p">,</span> <span class="n">xticks</span><span class="p">,</span> <span class="n">yticks</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">structure</span> <span class="o">=</span> <span class="n">structure</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">template</span> <span class="o">=</span> <span class="n">template</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xticks</span> <span class="o">=</span> <span class="n">xticks</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">yticks</span> <span class="o">=</span> <span class="n">yticks</span></div>
+
+
+<div class="viewcode-block" id="check_valid_color"><a class="viewcode-back" href="../../../grandflow.plot.html#grandflow.plot.plot.check_valid_color">[docs]</a><span class="k">def</span> <span class="nf">check_valid_color</span><span class="p">(</span><span class="n">color</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Check if the color provided by the user is valid.</span>
+
+<span class="sd">    If color is invalid the default is returned.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">color</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">mcolors</span><span class="o">.</span><span class="n">CSS4_COLORS</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;#4CB391&quot;</span><span class="p">]:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Nanoplotter: Valid color </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">color</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">color</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Nanoplotter: Invalid color </span><span class="si">{}</span><span class="s2">, using default.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">color</span><span class="p">))</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Invalid color </span><span class="si">{}</span><span class="s2">, using default.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">color</span><span class="p">))</span>
+        <span class="k">return</span> <span class="s2">&quot;#4CB391&quot;</span></div>
+
+
+<div class="viewcode-block" id="check_valid_format"><a class="viewcode-back" href="../../../grandflow.plot.html#grandflow.plot.plot.check_valid_format">[docs]</a><span class="k">def</span> <span class="nf">check_valid_format</span><span class="p">(</span><span class="n">figformat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Check if the specified figure format is valid.</span>
+
+<span class="sd">    If format is invalid the default is returned.</span>
+<span class="sd">    Probably installation-dependent</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">figformat</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">fig</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">get_supported_filetypes</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Nanoplotter: valid output format </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">figformat</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">figformat</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Nanoplotter: invalid output format </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">figformat</span><span class="p">))</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Invalid format </span><span class="si">{}</span><span class="s2">, using default.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">figformat</span><span class="p">))</span>
+        <span class="k">return</span> <span class="s2">&quot;png&quot;</span></div>
+
+
+<div class="viewcode-block" id="scatter"><a class="viewcode-back" href="../../../grandflow.plot.html#grandflow.plot.plot.scatter">[docs]</a><span class="k">def</span> <span class="nf">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">names</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">plots</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#4CB391&quot;</span><span class="p">,</span> <span class="n">figformat</span><span class="o">=</span><span class="s2">&quot;png&quot;</span><span class="p">,</span>
+            <span class="n">stat</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">minvalx</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">minvaly</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create bivariate plots.</span>
+
+<span class="sd">    Create four types of bivariate plots of x vs y, containing marginal summaries</span>
+<span class="sd">    -A scatter plot with histograms on axes</span>
+<span class="sd">    -A hexagonal binned plot with histograms on axes</span>
+<span class="sd">    -A kernel density plot with density curves on axes</span>
+<span class="sd">    -A pauvre-style plot using code from https://github.com/conchoecia/pauvre</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Nanoplotter: Creating </span><span class="si">{}</span><span class="s2"> vs </span><span class="si">{}</span><span class="s2"> plots using statistics from </span><span class="si">{}</span><span class="s2"> reads.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">names</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+    <span class="n">sns</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s2">&quot;ticks&quot;</span><span class="p">)</span>
+    <span class="n">maxvalx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">maxvaly</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+    <span class="n">plots_made</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="n">plots</span><span class="p">[</span><span class="s2">&quot;hex&quot;</span><span class="p">]:</span>
+        <span class="n">hex_plot</span> <span class="o">=</span> <span class="n">Plot</span><span class="p">(</span>
+            <span class="n">path</span><span class="o">=</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;_hex.&quot;</span> <span class="o">+</span> <span class="n">figformat</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> vs </span><span class="si">{}</span><span class="s2"> plot using hexagonal bins&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">names</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">plot</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">jointplot</span><span class="p">(</span>
+            <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+            <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
+            <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;hex&quot;</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+            <span class="n">stat_func</span><span class="o">=</span><span class="n">stat</span><span class="p">,</span>
+            <span class="n">space</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">xlim</span><span class="o">=</span><span class="p">(</span><span class="n">minvalx</span><span class="p">,</span> <span class="n">maxvalx</span><span class="p">),</span>
+            <span class="n">ylim</span><span class="o">=</span><span class="p">(</span><span class="n">minvaly</span><span class="p">,</span> <span class="n">maxvaly</span><span class="p">),</span>
+            <span class="n">size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">set_axis_labels</span><span class="p">(</span><span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">names</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">log</span><span class="p">:</span>
+            <span class="n">hex_plot</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">hex_plot</span><span class="o">.</span><span class="n">title</span> <span class="o">+</span> <span class="s2">&quot; after log transformation of read lengths&quot;</span>
+            <span class="n">ticks</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="o">**</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="mi">10</span><span class="o">**</span><span class="n">i</span> <span class="o">&gt;</span> <span class="mi">10</span> <span class="o">*</span> <span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="n">maxvalx</span><span class="p">)]</span>
+            <span class="n">plot</span><span class="o">.</span><span class="n">ax_joint</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">ticks</span><span class="p">))</span>
+            <span class="n">plot</span><span class="o">.</span><span class="n">ax_marg_x</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">ticks</span><span class="p">))</span>
+            <span class="n">plot</span><span class="o">.</span><span class="n">ax_joint</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="n">ticks</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">top</span><span class="o">=</span><span class="mf">0.90</span><span class="p">)</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">title</span> <span class="ow">or</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> vs </span><span class="si">{}</span><span class="s2"> plot&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">names</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">25</span><span class="p">)</span>
+        <span class="n">hex_plot</span><span class="o">.</span><span class="n">fig</span> <span class="o">=</span> <span class="n">plot</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">hex_plot</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="n">figformat</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
+        <span class="n">plots_made</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hex_plot</span><span class="p">)</span>
+
+    <span class="n">sns</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s2">&quot;darkgrid&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">plots</span><span class="p">[</span><span class="s2">&quot;dot&quot;</span><span class="p">]:</span>
+        <span class="n">dot_plot</span> <span class="o">=</span> <span class="n">Plot</span><span class="p">(</span>
+            <span class="n">path</span><span class="o">=</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;_dot.&quot;</span> <span class="o">+</span> <span class="n">figformat</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> vs </span><span class="si">{}</span><span class="s2"> plot using dots&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">names</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">plot</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">jointplot</span><span class="p">(</span>
+            <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+            <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
+            <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;scatter&quot;</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+            <span class="n">stat_func</span><span class="o">=</span><span class="n">stat</span><span class="p">,</span>
+            <span class="n">xlim</span><span class="o">=</span><span class="p">(</span><span class="n">minvalx</span><span class="p">,</span> <span class="n">maxvalx</span><span class="p">),</span>
+            <span class="n">ylim</span><span class="o">=</span><span class="p">(</span><span class="n">minvaly</span><span class="p">,</span> <span class="n">maxvaly</span><span class="p">),</span>
+            <span class="n">space</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+            <span class="n">joint_kws</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;s&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">set_axis_labels</span><span class="p">(</span><span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">names</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">log</span><span class="p">:</span>
+            <span class="n">dot_plot</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">dot_plot</span><span class="o">.</span><span class="n">title</span> <span class="o">+</span> <span class="s2">&quot; after log transformation of read lengths&quot;</span>
+            <span class="n">ticks</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="o">**</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="mi">10</span><span class="o">**</span><span class="n">i</span> <span class="o">&gt;</span> <span class="mi">10</span> <span class="o">*</span> <span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="n">maxvalx</span><span class="p">)]</span>
+            <span class="n">plot</span><span class="o">.</span><span class="n">ax_joint</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">ticks</span><span class="p">))</span>
+            <span class="n">plot</span><span class="o">.</span><span class="n">ax_marg_x</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">ticks</span><span class="p">))</span>
+            <span class="n">plot</span><span class="o">.</span><span class="n">ax_joint</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="n">ticks</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">top</span><span class="o">=</span><span class="mf">0.90</span><span class="p">)</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">title</span> <span class="ow">or</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> vs </span><span class="si">{}</span><span class="s2"> plot&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">names</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">25</span><span class="p">)</span>
+        <span class="n">dot_plot</span><span class="o">.</span><span class="n">fig</span> <span class="o">=</span> <span class="n">plot</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">dot_plot</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="n">figformat</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
+        <span class="n">plots_made</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dot_plot</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">plots</span><span class="p">[</span><span class="s2">&quot;kde&quot;</span><span class="p">]:</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span> <span class="nb">min</span><span class="p">(</span><span class="mi">2000</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">kde_plot</span> <span class="o">=</span> <span class="n">Plot</span><span class="p">(</span>
+            <span class="n">path</span><span class="o">=</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;_kde.&quot;</span> <span class="o">+</span> <span class="n">figformat</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> vs </span><span class="si">{}</span><span class="s2"> plot using a kernel density estimation&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">names</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">plot</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">jointplot</span><span class="p">(</span>
+            <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span>
+            <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span>
+            <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;kde&quot;</span><span class="p">,</span>
+            <span class="n">clip</span><span class="o">=</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">Inf</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">Inf</span><span class="p">)),</span>
+            <span class="n">xlim</span><span class="o">=</span><span class="p">(</span><span class="n">minvalx</span><span class="p">,</span> <span class="n">maxvalx</span><span class="p">),</span>
+            <span class="n">ylim</span><span class="o">=</span><span class="p">(</span><span class="n">minvaly</span><span class="p">,</span> <span class="n">maxvaly</span><span class="p">),</span>
+            <span class="n">space</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+            <span class="n">stat_func</span><span class="o">=</span><span class="n">stat</span><span class="p">,</span>
+            <span class="n">shade_lowest</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">set_axis_labels</span><span class="p">(</span><span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">names</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">log</span><span class="p">:</span>
+            <span class="n">kde_plot</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">kde_plot</span><span class="o">.</span><span class="n">title</span> <span class="o">+</span> <span class="s2">&quot; after log transformation of read lengths&quot;</span>
+            <span class="n">ticks</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="o">**</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="mi">10</span><span class="o">**</span><span class="n">i</span> <span class="o">&gt;</span> <span class="mi">10</span> <span class="o">*</span> <span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="n">maxvalx</span><span class="p">)]</span>
+            <span class="n">plot</span><span class="o">.</span><span class="n">ax_joint</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">ticks</span><span class="p">))</span>
+            <span class="n">plot</span><span class="o">.</span><span class="n">ax_marg_x</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">ticks</span><span class="p">))</span>
+            <span class="n">plot</span><span class="o">.</span><span class="n">ax_joint</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="n">ticks</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">top</span><span class="o">=</span><span class="mf">0.90</span><span class="p">)</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">title</span> <span class="ow">or</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> vs </span><span class="si">{}</span><span class="s2"> plot&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">names</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">25</span><span class="p">)</span>
+        <span class="n">kde_plot</span><span class="o">.</span><span class="n">fig</span> <span class="o">=</span> <span class="n">plot</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">kde_plot</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="n">figformat</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
+        <span class="n">plots_made</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">kde_plot</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">plots</span><span class="p">[</span><span class="s2">&quot;pauvre&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">names</span> <span class="o">==</span> <span class="p">[</span><span class="s1">&#39;Read lengths&#39;</span><span class="p">,</span> <span class="s1">&#39;Average read quality&#39;</span><span class="p">]:</span>
+        <span class="n">pauvre_plot</span> <span class="o">=</span> <span class="n">Plot</span><span class="p">(</span>
+            <span class="n">path</span><span class="o">=</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;_pauvre.&quot;</span> <span class="o">+</span> <span class="n">figformat</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> vs </span><span class="si">{}</span><span class="s2"> plot using pauvre-style @conchoecia&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">names</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">sns</span><span class="o">.</span><span class="n">set_style</span><span class="p">(</span><span class="s2">&quot;white&quot;</span><span class="p">)</span>
+        <span class="n">margin_plot</span><span class="p">(</span><span class="n">df</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;length&quot;</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span> <span class="s2">&quot;meanQual&quot;</span><span class="p">:</span> <span class="n">y</span><span class="p">}),</span>
+                    <span class="n">Y_AXES</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">title</span><span class="o">=</span><span class="n">title</span> <span class="ow">or</span> <span class="s2">&quot;Length vs Quality in Pauvre-style&quot;</span><span class="p">,</span>
+                    <span class="n">plot_maxlen</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">plot_minlen</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                    <span class="n">plot_maxqual</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">plot_minqual</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                    <span class="n">lengthbin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">qualbin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">BASENAME</span><span class="o">=</span><span class="s2">&quot;whatever&quot;</span><span class="p">,</span>
+                    <span class="n">path</span><span class="o">=</span><span class="n">pauvre_plot</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>
+                    <span class="n">fileform</span><span class="o">=</span><span class="p">[</span><span class="n">figformat</span><span class="p">],</span>
+                    <span class="n">dpi</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span>
+                    <span class="n">TRANSPARENT</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">QUIET</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">log</span><span class="p">:</span>
+            <span class="n">pauvre_plot</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">pauvre_plot</span><span class="o">.</span><span class="n">title</span> <span class="o">+</span> <span class="s2">&quot; after log transformation of read lengths&quot;</span>
+        <span class="n">plots_made</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pauvre_plot</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">plots_made</span></div>
+
+
+<div class="viewcode-block" id="check_valid_time_and_sort"><a class="viewcode-back" href="../../../grandflow.plot.html#grandflow.plot.plot.check_valid_time_and_sort">[docs]</a><span class="k">def</span> <span class="nf">check_valid_time_and_sort</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">timescol</span><span class="p">,</span> <span class="n">days</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">warning</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Check if the data contains reads created within the same `days` timeframe.</span>
+
+<span class="sd">    if not, print warning and only return part of the data which is within `days` days</span>
+<span class="sd">    Resetting the index twice to get also an &quot;index&quot; column for plotting the cum_yield_reads plot</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">timediff</span> <span class="o">=</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">timescol</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">df</span><span class="p">[</span><span class="n">timescol</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">())</span><span class="o">.</span><span class="n">days</span>
+    <span class="k">if</span> <span class="n">timediff</span> <span class="o">&lt;</span> <span class="n">days</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">timescol</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">warning</span><span class="p">:</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Warning: data generated is from more than </span><span class="si">{}</span><span class="s2"> days.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">days</span><span class="p">)))</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Likely this indicates you are combining multiple runs.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="s2">&quot;Plots based on time are invalid and therefore truncated to first </span><span class="si">{}</span><span class="s2"> days.</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+                <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">days</span><span class="p">)))</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Time plots truncated to first </span><span class="si">{}</span><span class="s2"> days: invalid timespan: </span><span class="si">{}</span><span class="s2"> days&quot;</span>
+                            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">days</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">timediff</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">timescol</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">days</span><span class="p">)]</span> \
+            <span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">timescol</span><span class="p">)</span> \
+            <span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> \
+            <span class="o">.</span><span class="n">reset_index</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="time_plots"><a class="viewcode-back" href="../../../grandflow.plot.html#grandflow.plot.plot.time_plots">[docs]</a><span class="k">def</span> <span class="nf">time_plots</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#4CB391&quot;</span><span class="p">,</span> <span class="n">figformat</span><span class="o">=</span><span class="s2">&quot;png&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Making plots of time vs read length, time vs quality and cumulative yield.&quot;&quot;&quot;</span>
+    <span class="n">dfs</span> <span class="o">=</span> <span class="n">check_valid_time_and_sort</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;start_time&quot;</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Nanoplotter: Creating timeplots using </span><span class="si">{}</span><span class="s2"> reads.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dfs</span><span class="p">)))</span>
+    <span class="n">cumyields</span> <span class="o">=</span> <span class="n">cumulative_yield</span><span class="p">(</span><span class="n">dfs</span><span class="o">=</span><span class="n">dfs</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;start_time&quot;</span><span class="p">),</span>
+                                 <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
+                                 <span class="n">figformat</span><span class="o">=</span><span class="n">figformat</span><span class="p">,</span>
+                                 <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span>
+                                 <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
+    <span class="n">violins</span> <span class="o">=</span> <span class="n">violin_plots_over_time</span><span class="p">(</span><span class="n">dfs</span><span class="o">=</span><span class="n">dfs</span><span class="p">,</span>
+                                     <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
+                                     <span class="n">figformat</span><span class="o">=</span><span class="n">figformat</span><span class="p">,</span>
+                                     <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cumyields</span> <span class="o">+</span> <span class="n">violins</span></div>
+
+
+<div class="viewcode-block" id="violin_plots_over_time"><a class="viewcode-back" href="../../../grandflow.plot.html#grandflow.plot.plot.violin_plots_over_time">[docs]</a><span class="k">def</span> <span class="nf">violin_plots_over_time</span><span class="p">(</span><span class="n">dfs</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">figformat</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span>
+    <span class="n">maxtime</span> <span class="o">=</span> <span class="n">dfs</span><span class="p">[</span><span class="s2">&quot;start_time&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span>
+    <span class="n">time_length</span> <span class="o">=</span> <span class="n">Plot</span><span class="p">(</span>
+        <span class="n">path</span><span class="o">=</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;TimeLengthViolinPlot.&quot;</span> <span class="o">+</span> <span class="n">figformat</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Violin plot of read lengths over time&quot;</span><span class="p">)</span>
+    <span class="n">sns</span><span class="o">.</span><span class="n">set_style</span><span class="p">(</span><span class="s2">&quot;white&quot;</span><span class="p">)</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">6</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">168</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="p">(</span><span class="n">maxtime</span> <span class="o">/</span> <span class="mi">3600</span><span class="p">)]</span>
+    <span class="n">dfs</span><span class="p">[</span><span class="s1">&#39;timebin&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">cut</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">dfs</span><span class="p">[</span><span class="s2">&quot;start_time&quot;</span><span class="p">],</span>
+        <span class="n">bins</span><span class="o">=</span><span class="n">ceil</span><span class="p">((</span><span class="n">maxtime</span> <span class="o">/</span> <span class="mi">3600</span><span class="p">)</span> <span class="o">/</span> <span class="mi">6</span><span class="p">),</span>
+        <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">)</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">violinplot</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="s2">&quot;timebin&quot;</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="s2">&quot;lengths&quot;</span><span class="p">,</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">dfs</span><span class="p">,</span>
+        <span class="n">inner</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">cut</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">linewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
+        <span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;Interval (hours)&#39;</span><span class="p">,</span>
+        <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;Read length&quot;</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="n">title</span> <span class="ow">or</span> <span class="n">time_length</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">rotation</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">)</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
+    <span class="n">time_length</span><span class="o">.</span><span class="n">fig</span> <span class="o">=</span> <span class="n">fig</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span>
+        <span class="n">fname</span><span class="o">=</span><span class="n">time_length</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>
+        <span class="nb">format</span><span class="o">=</span><span class="n">figformat</span><span class="p">,</span>
+        <span class="n">dpi</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+        <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
+
+    <span class="n">plots</span> <span class="o">=</span> <span class="p">[</span><span class="n">time_length</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="s2">&quot;quals&quot;</span> <span class="ow">in</span> <span class="n">dfs</span><span class="p">:</span>
+        <span class="n">time_qual</span> <span class="o">=</span> <span class="n">Plot</span><span class="p">(</span>
+            <span class="n">path</span><span class="o">=</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;TimeQualityViolinPlot.&quot;</span> <span class="o">+</span> <span class="n">figformat</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Violin plot of quality over time&quot;</span><span class="p">)</span>
+        <span class="n">sns</span><span class="o">.</span><span class="n">set_style</span><span class="p">(</span><span class="s2">&quot;white&quot;</span><span class="p">)</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">violinplot</span><span class="p">(</span>
+            <span class="n">x</span><span class="o">=</span><span class="s2">&quot;timebin&quot;</span><span class="p">,</span>
+            <span class="n">y</span><span class="o">=</span><span class="s2">&quot;quals&quot;</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">dfs</span><span class="p">,</span>
+            <span class="n">inner</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">cut</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">linewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
+            <span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;Interval (hours)&#39;</span><span class="p">,</span>
+            <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;Basecall quality&quot;</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="n">title</span> <span class="ow">or</span> <span class="n">time_qual</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">rotation</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">)</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
+        <span class="n">time_qual</span><span class="o">.</span><span class="n">fig</span> <span class="o">=</span> <span class="n">fig</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span>
+            <span class="n">fname</span><span class="o">=</span><span class="n">time_qual</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>
+            <span class="nb">format</span><span class="o">=</span><span class="n">figformat</span><span class="p">,</span>
+            <span class="n">dpi</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+            <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+        <span class="n">plots</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">time_qual</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">plots</span></div>
+
+
+<div class="viewcode-block" id="cumulative_yield"><a class="viewcode-back" href="../../../grandflow.plot.html#grandflow.plot.plot.cumulative_yield">[docs]</a><span class="k">def</span> <span class="nf">cumulative_yield</span><span class="p">(</span><span class="n">dfs</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">figformat</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">color</span><span class="p">):</span>
+    <span class="n">cum_yield_gb</span> <span class="o">=</span> <span class="n">Plot</span><span class="p">(</span>
+        <span class="n">path</span><span class="o">=</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;CumulativeYieldPlot_Gigabases.&quot;</span> <span class="o">+</span> <span class="n">figformat</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Cumulative yield&quot;</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">dfs</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s2">&quot;lengths&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="s1">&#39;10T&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">/</span> <span class="mf">1e9</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">regplot</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">/</span> <span class="mi">3600</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="n">s</span><span class="p">,</span>
+        <span class="n">x_ci</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">fit_reg</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+        <span class="n">scatter_kws</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;s&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">})</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
+        <span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;Run time (hours)&#39;</span><span class="p">,</span>
+        <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;Cumulative yield in gigabase&#39;</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="n">title</span> <span class="ow">or</span> <span class="n">cum_yield_gb</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
+    <span class="n">cum_yield_gb</span><span class="o">.</span><span class="n">fig</span> <span class="o">=</span> <span class="n">fig</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">cum_yield_gb</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="n">figformat</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
+
+    <span class="n">cum_yield_reads</span> <span class="o">=</span> <span class="n">Plot</span><span class="p">(</span>
+        <span class="n">path</span><span class="o">=</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;CumulativeYieldPlot_NumberOfReads.&quot;</span> <span class="o">+</span> <span class="n">figformat</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Cumulative yield&quot;</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">dfs</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s2">&quot;lengths&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="s1">&#39;10T&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">regplot</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">/</span> <span class="mi">3600</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="n">s</span><span class="p">,</span>
+        <span class="n">x_ci</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">fit_reg</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+        <span class="n">scatter_kws</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;s&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">})</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
+        <span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;Run time (hours)&#39;</span><span class="p">,</span>
+        <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;Cumulative yield in number of reads&#39;</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="n">title</span> <span class="ow">or</span> <span class="n">cum_yield_reads</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
+    <span class="n">cum_yield_reads</span><span class="o">.</span><span class="n">fig</span> <span class="o">=</span> <span class="n">fig</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">cum_yield_reads</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="n">figformat</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
+
+    <span class="n">num_reads</span> <span class="o">=</span> <span class="n">Plot</span><span class="p">(</span>
+        <span class="n">path</span><span class="o">=</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;NumberOfReads_Over_Time.&quot;</span> <span class="o">+</span> <span class="n">figformat</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Number of reads over time&quot;</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">dfs</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s2">&quot;lengths&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="s1">&#39;10T&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">regplot</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">/</span> <span class="mi">3600</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="n">s</span><span class="p">,</span>
+        <span class="n">x_ci</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">fit_reg</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+        <span class="n">scatter_kws</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;s&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">})</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
+        <span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;Run time (hours)&#39;</span><span class="p">,</span>
+        <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;Number of reads per 10 minutes&#39;</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="n">title</span> <span class="ow">or</span> <span class="n">num_reads</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
+    <span class="n">num_reads</span><span class="o">.</span><span class="n">fig</span> <span class="o">=</span> <span class="n">fig</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">num_reads</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="n">figformat</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">[</span><span class="n">cum_yield_gb</span><span class="p">,</span> <span class="n">cum_yield_reads</span><span class="p">,</span> <span class="n">num_reads</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="length_plots"><a class="viewcode-back" href="../../../grandflow.plot.html#grandflow.plot.plot.length_plots">[docs]</a><span class="k">def</span> <span class="nf">length_plots</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">n50</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#4CB391&quot;</span><span class="p">,</span>
+                 <span class="n">figformat</span><span class="o">=</span><span class="s2">&quot;png&quot;</span><span class="p">,</span> <span class="n">binsize</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create histogram of read lengths.&quot;&quot;&quot;</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Nanoplotter: Creating length plots for </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+    <span class="n">maxvalx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n50</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Nanoplotter: Using </span><span class="si">{}</span><span class="s2"> reads with read length N50 of </span><span class="si">{}</span><span class="s2">bp and maximum of </span><span class="si">{}</span><span class="s2">bp.&quot;</span>
+                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">n50</span><span class="p">,</span> <span class="n">maxvalx</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Nanoplotter: Using </span><span class="si">{}</span><span class="s2"> reads maximum of </span><span class="si">{}</span><span class="s2">bp.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">maxvalx</span><span class="p">))</span>
+
+    <span class="n">HistType</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;HistType&#39;</span><span class="p">,</span> <span class="s1">&#39;weight name binsize ylabel&#39;</span><span class="p">)</span>
+    <span class="n">plots</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">h_type</span> <span class="ow">in</span> <span class="p">[</span><span class="n">HistType</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">binsize</span><span class="p">,</span> <span class="s2">&quot;Number of reads&quot;</span><span class="p">)]:</span>
+        <span class="n">histogram</span> <span class="o">=</span> <span class="n">Plot</span><span class="p">(</span>
+            <span class="n">path</span><span class="o">=</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;reads_length_histogram.&quot;</span> <span class="o">+</span> <span class="n">figformat</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="n">h_type</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;Histogram of read lengths&quot;</span><span class="p">)</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">distplot</span><span class="p">(</span>
+            <span class="n">a</span><span class="o">=</span><span class="n">array</span><span class="p">,</span>
+            <span class="n">kde</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">hist</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">bins</span><span class="o">=</span><span class="nb">round</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">maxvalx</span><span class="p">)</span> <span class="o">/</span> <span class="n">h_type</span><span class="o">.</span><span class="n">binsize</span><span class="p">),</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+            <span class="c1"># hist_kws={&quot;weights&quot;: h_type.weight}</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">n50</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">n50</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="s1">&#39; N50:</span><span class="si">{:,}</span><span class="s1">bp&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n50</span><span class="p">),</span> <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="n">n50</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">([</span><span class="n">h</span><span class="o">.</span><span class="n">get_height</span><span class="p">()</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">ax</span><span class="o">.</span><span class="n">patches</span><span class="p">])),</span> <span class="n">size</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
+            <span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;Read length&#39;</span><span class="p">,</span>
+            <span class="n">ylabel</span><span class="o">=</span><span class="n">h_type</span><span class="o">.</span><span class="n">ylabel</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="n">title</span> <span class="ow">or</span> <span class="n">histogram</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ticklabel_format</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s1">&#39;plain&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
+        <span class="n">histogram</span><span class="o">.</span><span class="n">fig</span> <span class="o">=</span> <span class="n">fig</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">histogram</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="n">figformat</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s2">&quot;all&quot;</span><span class="p">)</span></div>
+
+        <span class="c1"># log_histogram = Plot(</span>
+            <span class="c1"># path=path + h_type.name.replace(&quot; &quot;, &quot;_&quot;) + &quot;LogTransformed_Histogram&quot; +</span>
+            <span class="c1"># name.replace(&#39; &#39;, &#39;&#39;) + &quot;.&quot; + figformat,</span>
+            <span class="c1"># title=h_type.name + &quot;Histogram of read lengths after log transformation&quot;)</span>
+        <span class="c1"># ax = sns.distplot(</span>
+            <span class="c1"># a=np.log10(array),</span>
+            <span class="c1"># kde=False,</span>
+            <span class="c1"># hist=True,</span>
+            <span class="c1"># color=color,</span>
+            <span class="c1"># hist_kws={&quot;weights&quot;: h_type.weight})</span>
+        <span class="c1"># ticks = [10**i for i in range(10) if not 10**i &gt; 10 * maxvalx]</span>
+        <span class="c1"># ax.set(</span>
+            <span class="c1"># xticks=np.log10(ticks),</span>
+            <span class="c1"># xticklabels=ticks,</span>
+            <span class="c1"># xlabel=&#39;Read length&#39;,</span>
+            <span class="c1"># ylabel=h_type.ylabel,</span>
+            <span class="c1"># title=title or log_histogram.title)</span>
+        <span class="c1"># if n50:</span>
+            <span class="c1"># plt.axvline(np.log10(n50))</span>
+            <span class="c1"># plt.annotate(&#39;N50&#39;, xy=(np.log10(n50), np.amax(</span>
+                <span class="c1"># [h.get_height() for h in ax.patches])), size=8)</span>
+        <span class="c1"># plt.ticklabel_format(style=&#39;plain&#39;, axis=&#39;y&#39;)</span>
+        <span class="c1"># fig = ax.get_figure()</span>
+        <span class="c1"># log_histogram.fig = fig</span>
+        <span class="c1"># fig.savefig(log_histogram.path, format=figformat, dpi=100, bbox_inches=&quot;tight&quot;)</span>
+        <span class="c1"># plt.close(&quot;all&quot;)</span>
+        <span class="c1"># plots.extend([histogram, log_histogram])</span>
+    <span class="c1"># plots.append(yield_by_minimal_length_plot(array, name, path, title=None,</span>
+                                              <span class="c1"># n50=None, color=&quot;#4CB391&quot;, figformat=&quot;png&quot;))</span>
+    <span class="c1"># return plots</span>
+
+
+<div class="viewcode-block" id="yield_by_minimal_length_plot"><a class="viewcode-back" href="../../../grandflow.plot.html#grandflow.plot.plot.yield_by_minimal_length_plot">[docs]</a><span class="k">def</span> <span class="nf">yield_by_minimal_length_plot</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span>
+                                 <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n50</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#4CB391&quot;</span><span class="p">,</span> <span class="n">figformat</span><span class="o">=</span><span class="s2">&quot;png&quot;</span><span class="p">):</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;lengths&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">array</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]})</span>
+    <span class="n">df</span><span class="p">[</span><span class="s2">&quot;cumyield_gb&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;lengths&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span> <span class="o">/</span> <span class="mi">10</span><span class="o">**</span><span class="mi">9</span>
+    <span class="n">yield_by_length</span> <span class="o">=</span> <span class="n">Plot</span><span class="p">(</span>
+        <span class="n">path</span><span class="o">=</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;Yield_By_Length.&quot;</span> <span class="o">+</span> <span class="n">figformat</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Yield by length&quot;</span><span class="p">)</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">regplot</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="s1">&#39;lengths&#39;</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="s2">&quot;cumyield_gb&quot;</span><span class="p">,</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">df</span><span class="p">,</span>
+        <span class="n">x_ci</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">fit_reg</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+        <span class="n">scatter_kws</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;s&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">})</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
+        <span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;Read length&#39;</span><span class="p">,</span>
+        <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;Cumulative yield for minimal length&#39;</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="n">title</span> <span class="ow">or</span> <span class="n">yield_by_length</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
+    <span class="n">yield_by_length</span><span class="o">.</span><span class="n">fig</span> <span class="o">=</span> <span class="n">fig</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">yield_by_length</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="n">figformat</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">yield_by_length</span></div>
+
+
+<div class="viewcode-block" id="make_layout"><a class="viewcode-back" href="../../../grandflow.plot.html#grandflow.plot.plot.make_layout">[docs]</a><span class="k">def</span> <span class="nf">make_layout</span><span class="p">(</span><span class="n">maxval</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Make the physical layout of the MinION flowcell.</span>
+<span class="sd">    based on https://bioinformatics.stackexchange.com/a/749/681</span>
+<span class="sd">    returned as a numpy array</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">maxval</span> <span class="o">&gt;</span> <span class="mi">512</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Layout</span><span class="p">(</span>
+            <span class="n">structure</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">i</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">+</span> <span class="mi">11</span><span class="p">))</span>
+                                                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">25</span><span class="p">)])</span> <span class="o">+</span> <span class="n">j</span>
+                                      <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3000</span><span class="p">,</span> <span class="mi">250</span><span class="p">)],</span>
+                                     <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+            <span class="n">template</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">25</span><span class="p">,</span> <span class="mi">120</span><span class="p">)),</span>
+            <span class="n">xticks</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">121</span><span class="p">),</span>
+            <span class="n">yticks</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">26</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">layoutlist</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+                <span class="p">[</span><span class="mi">33</span><span class="p">,</span> <span class="mi">481</span><span class="p">,</span> <span class="mi">417</span><span class="p">,</span> <span class="mi">353</span><span class="p">,</span> <span class="mi">289</span><span class="p">,</span> <span class="mi">225</span><span class="p">,</span> <span class="mi">161</span><span class="p">,</span> <span class="mi">97</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="mi">456</span><span class="p">,</span> <span class="mi">392</span><span class="p">,</span> <span class="mi">328</span><span class="p">,</span> <span class="mi">264</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">136</span><span class="p">,</span> <span class="mi">72</span><span class="p">]):</span>
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+                <span class="n">layoutlist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="n">n</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="n">n</span> <span class="o">*</span> <span class="mi">8</span><span class="p">)</span> <span class="o">+</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">+</span>
+                                  <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">j</span> <span class="o">+</span> <span class="n">n</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="p">(</span><span class="n">j</span> <span class="o">+</span> <span class="n">n</span> <span class="o">*</span> <span class="mi">8</span><span class="p">)</span> <span class="o">-</span> <span class="mi">8</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">Layout</span><span class="p">(</span>
+            <span class="n">structure</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">layoutlist</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">(),</span>
+            <span class="n">template</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">16</span><span class="p">,</span> <span class="mi">32</span><span class="p">)),</span>
+            <span class="n">xticks</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">33</span><span class="p">),</span>
+            <span class="n">yticks</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">17</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="spatial_heatmap"><a class="viewcode-back" href="../../../grandflow.plot.html#grandflow.plot.plot.spatial_heatmap">[docs]</a><span class="k">def</span> <span class="nf">spatial_heatmap</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;Greens&quot;</span><span class="p">,</span> <span class="n">figformat</span><span class="o">=</span><span class="s2">&quot;png&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Taking channel information and creating post run channel activity plots.&quot;&quot;&quot;</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Nanoplotter: Creating heatmap of reads per channel using </span><span class="si">{}</span><span class="s2"> reads.&quot;</span>
+                 <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+    <span class="n">activity_map</span> <span class="o">=</span> <span class="n">Plot</span><span class="p">(</span>
+        <span class="n">path</span><span class="o">=</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">figformat</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Number of reads generated per channel&quot;</span><span class="p">)</span>
+    <span class="n">layout</span> <span class="o">=</span> <span class="n">make_layout</span><span class="p">(</span><span class="n">maxval</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">array</span><span class="p">))</span>
+    <span class="n">valueCounts</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">array</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">valueCounts</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">template</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">layout</span><span class="o">.</span><span class="n">structure</span> <span class="o">==</span> <span class="n">entry</span><span class="p">)]</span> <span class="o">=</span> <span class="n">valueCounts</span><span class="p">[</span><span class="n">entry</span><span class="p">]</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">heatmap</span><span class="p">(</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">layout</span><span class="o">.</span><span class="n">template</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">layout</span><span class="o">.</span><span class="n">yticks</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">layout</span><span class="o">.</span><span class="n">xticks</span><span class="p">),</span>
+        <span class="n">xticklabels</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+        <span class="n">yticklabels</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+        <span class="n">square</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">cbar_kws</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;orientation&quot;</span><span class="p">:</span> <span class="s2">&quot;horizontal&quot;</span><span class="p">},</span>
+        <span class="n">cmap</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+        <span class="n">linewidths</span><span class="o">=</span><span class="mf">0.20</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span> <span class="ow">or</span> <span class="n">activity_map</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
+    <span class="n">activity_map</span><span class="o">.</span><span class="n">fig</span> <span class="o">=</span> <span class="n">fig</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">activity_map</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="n">figformat</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">activity_map</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="violin_or_box_plot"><a class="viewcode-back" href="../../../grandflow.plot.html#grandflow.plot.plot.violin_or_box_plot">[docs]</a><span class="k">def</span> <span class="nf">violin_or_box_plot</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">figformat</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">y_name</span><span class="p">,</span>
+                       <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">violin</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">palette</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create a violin or boxplot from the received DataFrame.</span>
+
+<span class="sd">    The x-axis should be divided based on the &#39;dataset&#39; column,</span>
+<span class="sd">    the y-axis is specified in the arguments</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">violin_comp</span> <span class="o">=</span> <span class="n">Plot</span><span class="p">(</span>
+        <span class="n">path</span><span class="o">=</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;NanoComp_&quot;</span> <span class="o">+</span> <span class="n">y</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">figformat</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Comparing </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">y</span> <span class="o">==</span> <span class="s2">&quot;quals&quot;</span><span class="p">:</span>
+        <span class="n">violin_comp</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;Comparing base call quality scores&quot;</span>
+    <span class="k">if</span> <span class="n">violin</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Nanoplotter: Creating violin plot for </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">violinplot</span><span class="p">(</span>
+            <span class="n">x</span><span class="o">=</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span>
+            <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">df</span><span class="p">,</span>
+            <span class="n">inner</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">cut</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">palette</span><span class="o">=</span><span class="n">palette</span><span class="p">,</span>
+            <span class="n">linewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Nanoplotter: Creating box plot for </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">boxplot</span><span class="p">(</span>
+            <span class="n">x</span><span class="o">=</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span>
+            <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">df</span><span class="p">,</span>
+            <span class="n">palette</span><span class="o">=</span><span class="n">palette</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">log</span><span class="p">:</span>
+        <span class="n">ticks</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="o">**</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="mi">10</span><span class="o">**</span><span class="n">i</span> <span class="o">&gt;</span> <span class="mi">10</span> <span class="o">*</span> <span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">y</span><span class="p">]))]</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
+            <span class="n">yticks</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">ticks</span><span class="p">),</span>
+            <span class="n">yticklabels</span><span class="o">=</span><span class="n">ticks</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="n">title</span> <span class="ow">or</span> <span class="n">violin_comp</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+           <span class="n">ylabel</span><span class="o">=</span><span class="n">y_name</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">rotation</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">)</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
+    <span class="n">violin_comp</span><span class="o">.</span><span class="n">fig</span> <span class="o">=</span> <span class="n">fig</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span>
+        <span class="n">fname</span><span class="o">=</span><span class="n">violin_comp</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>
+        <span class="nb">format</span><span class="o">=</span><span class="n">figformat</span><span class="p">,</span>
+        <span class="n">dpi</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+        <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">violin_comp</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="output_barplot"><a class="viewcode-back" href="../../../grandflow.plot.html#grandflow.plot.plot.output_barplot">[docs]</a><span class="k">def</span> <span class="nf">output_barplot</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">figformat</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">palette</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create barplots based on number of reads and total sum of nucleotides sequenced.&quot;&quot;&quot;</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Nanoplotter: Creating barplots for number of reads and total throughput.&quot;</span><span class="p">)</span>
+    <span class="n">read_count</span> <span class="o">=</span> <span class="n">Plot</span><span class="p">(</span>
+        <span class="n">path</span><span class="o">=</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;NanoComp_number_of_reads.&quot;</span> <span class="o">+</span> <span class="n">figformat</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Comparing number of reads&quot;</span><span class="p">)</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">countplot</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">df</span><span class="p">,</span>
+        <span class="n">palette</span><span class="o">=</span><span class="n">palette</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
+        <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;Number of reads&#39;</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="n">title</span> <span class="ow">or</span> <span class="n">read_count</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">rotation</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">)</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
+    <span class="n">read_count</span><span class="o">.</span><span class="n">fig</span> <span class="o">=</span> <span class="n">fig</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span>
+        <span class="n">fname</span><span class="o">=</span><span class="n">read_count</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>
+        <span class="nb">format</span><span class="o">=</span><span class="n">figformat</span><span class="p">,</span>
+        <span class="n">dpi</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+        <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
+
+    <span class="n">throughput_bases</span> <span class="o">=</span> <span class="n">Plot</span><span class="p">(</span>
+        <span class="n">path</span><span class="o">=</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;NanoComp_total_throughput.&quot;</span> <span class="o">+</span> <span class="n">figformat</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Comparing throughput in gigabases sequenced&quot;</span><span class="p">)</span>
+    <span class="n">throughput</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;dataset&#39;</span><span class="p">)[</span><span class="s1">&#39;lengths&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">barplot</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">throughput</span><span class="o">.</span><span class="n">index</span><span class="p">),</span>
+        <span class="n">y</span><span class="o">=</span><span class="n">throughput</span> <span class="o">/</span> <span class="mf">1e9</span><span class="p">,</span>
+        <span class="n">palette</span><span class="o">=</span><span class="n">palette</span><span class="p">,</span>
+        <span class="n">order</span><span class="o">=</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;dataset&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
+        <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;Total gigabase sequenced&#39;</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="n">title</span> <span class="ow">or</span> <span class="n">throughput_bases</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">rotation</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">)</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
+    <span class="n">throughput_bases</span><span class="o">.</span><span class="n">fig</span> <span class="o">=</span> <span class="n">fig</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span>
+        <span class="n">fname</span><span class="o">=</span><span class="n">throughput_bases</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>
+        <span class="nb">format</span><span class="o">=</span><span class="n">figformat</span><span class="p">,</span>
+        <span class="n">dpi</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+        <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">read_count</span><span class="p">,</span> <span class="n">throughput_bases</span></div>
+
+
+<div class="viewcode-block" id="compare_cumulative_yields"><a class="viewcode-back" href="../../../grandflow.plot.html#grandflow.plot.plot.compare_cumulative_yields">[docs]</a><span class="k">def</span> <span class="nf">compare_cumulative_yields</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">palette</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">palette</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">palette</span> <span class="o">=</span> <span class="n">plotly</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">DEFAULT_PLOTLY_COLORS</span> <span class="o">*</span> <span class="mi">5</span>
+    <span class="n">dfs</span> <span class="o">=</span> <span class="n">check_valid_time_and_sort</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;start_time&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;start_time&quot;</span><span class="p">)</span>
+
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Nanoplotter: Creating cumulative yield plots using </span><span class="si">{}</span><span class="s2"> reads.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dfs</span><span class="p">)))</span>
+    <span class="n">cum_yield_gb</span> <span class="o">=</span> <span class="n">Plot</span><span class="p">(</span>
+        <span class="n">path</span><span class="o">=</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;NanoComp_CumulativeYieldPlot_Gigabases.html&quot;</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Cumulative yield&quot;</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">d</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">unique</span><span class="p">(),</span> <span class="n">palette</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">dfs</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">dfs</span><span class="o">.</span><span class="n">dataset</span> <span class="o">==</span> <span class="n">d</span><span class="p">,</span> <span class="s2">&quot;lengths&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="s1">&#39;10T&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">/</span> <span class="mf">1e9</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">/</span> <span class="mi">3600</span><span class="p">,</span>
+                               <span class="n">y</span><span class="o">=</span><span class="n">s</span><span class="p">,</span>
+                               <span class="n">opacity</span><span class="o">=</span><span class="mf">0.75</span><span class="p">,</span>
+                               <span class="n">name</span><span class="o">=</span><span class="n">d</span><span class="p">,</span>
+                               <span class="n">marker</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="n">c</span><span class="p">))</span>
+                    <span class="p">)</span>
+    <span class="n">cum_yield_gb</span><span class="o">.</span><span class="n">html</span> <span class="o">=</span> <span class="n">plotly</span><span class="o">.</span><span class="n">offline</span><span class="o">.</span><span class="n">plot</span><span class="p">({</span>
+        <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">,</span>
+        <span class="s2">&quot;layout&quot;</span><span class="p">:</span> <span class="n">go</span><span class="o">.</span><span class="n">Layout</span><span class="p">(</span><span class="n">barmode</span><span class="o">=</span><span class="s1">&#39;overlay&#39;</span><span class="p">,</span>
+                            <span class="n">title</span><span class="o">=</span><span class="n">title</span> <span class="ow">or</span> <span class="n">cum_yield_gb</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+                            <span class="n">xaxis</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Time (hours)&quot;</span><span class="p">),</span>
+                            <span class="n">yaxis</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Yield (gigabase)&quot;</span><span class="p">),</span>
+                            <span class="p">)},</span>
+        <span class="n">output_type</span><span class="o">=</span><span class="s2">&quot;div&quot;</span><span class="p">,</span>
+        <span class="n">show_link</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">cum_yield_gb</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">html_out</span><span class="p">:</span>
+        <span class="n">html_out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">cum_yield_gb</span><span class="o">.</span><span class="n">html</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">cum_yield_gb</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="overlay_histogram"><a class="viewcode-back" href="../../../grandflow.plot.html#grandflow.plot.plot.overlay_histogram">[docs]</a><span class="k">def</span> <span class="nf">overlay_histogram</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">palette</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Use plotly to create an overlay of length histograms</span>
+<span class="sd">    Return html code</span>
+
+<span class="sd">    Only has 10 colors, which get recycled up to 5 times.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">palette</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">palette</span> <span class="o">=</span> <span class="n">plotly</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">DEFAULT_PLOTLY_COLORS</span> <span class="o">*</span> <span class="mi">5</span>
+    <span class="n">overlay_hist</span> <span class="o">=</span> <span class="n">Plot</span><span class="p">(</span>
+        <span class="n">path</span><span class="o">=</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;NanoComp_OverlayHistogram.html&quot;</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Histogram of read lengths&quot;</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">go</span><span class="o">.</span><span class="n">Histogram</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="o">.</span><span class="n">dataset</span> <span class="o">==</span> <span class="n">d</span><span class="p">,</span> <span class="s2">&quot;lengths&quot;</span><span class="p">],</span>
+                         <span class="n">opacity</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span>
+                         <span class="n">name</span><span class="o">=</span><span class="n">d</span><span class="p">,</span>
+                         <span class="n">marker</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="n">c</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">d</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">unique</span><span class="p">(),</span> <span class="n">palette</span><span class="p">)]</span>
+
+    <span class="n">overlay_hist</span><span class="o">.</span><span class="n">html</span> <span class="o">=</span> <span class="n">plotly</span><span class="o">.</span><span class="n">offline</span><span class="o">.</span><span class="n">plot</span><span class="p">({</span>
+        <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">,</span>
+        <span class="s2">&quot;layout&quot;</span><span class="p">:</span> <span class="n">go</span><span class="o">.</span><span class="n">Layout</span><span class="p">(</span><span class="n">barmode</span><span class="o">=</span><span class="s1">&#39;overlay&#39;</span><span class="p">,</span>
+                            <span class="n">title</span><span class="o">=</span><span class="n">overlay_hist</span><span class="o">.</span><span class="n">title</span><span class="p">)},</span>
+        <span class="n">output_type</span><span class="o">=</span><span class="s2">&quot;div&quot;</span><span class="p">,</span>
+        <span class="n">show_link</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">overlay_hist</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">html_out</span><span class="p">:</span>
+        <span class="n">html_out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">overlay_hist</span><span class="o">.</span><span class="n">html</span><span class="p">)</span>
+
+    <span class="n">overlay_hist_normalized</span> <span class="o">=</span> <span class="n">Plot</span><span class="p">(</span>
+        <span class="n">path</span><span class="o">=</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;NanoComp_OverlayHistogram_Normalized.html&quot;</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Normalized histogram of read lengths&quot;</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">go</span><span class="o">.</span><span class="n">Histogram</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="o">.</span><span class="n">dataset</span> <span class="o">==</span> <span class="n">d</span><span class="p">,</span> <span class="s2">&quot;lengths&quot;</span><span class="p">],</span>
+                         <span class="n">opacity</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span>
+                         <span class="n">name</span><span class="o">=</span><span class="n">d</span><span class="p">,</span>
+                         <span class="n">histnorm</span><span class="o">=</span><span class="s1">&#39;probability&#39;</span><span class="p">,</span>
+                         <span class="n">marker</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="n">c</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">d</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">unique</span><span class="p">(),</span> <span class="n">palette</span><span class="p">)]</span>
+
+    <span class="n">overlay_hist_normalized</span><span class="o">.</span><span class="n">html</span> <span class="o">=</span> <span class="n">plotly</span><span class="o">.</span><span class="n">offline</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+        <span class="p">{</span><span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">,</span>
+         <span class="s2">&quot;layout&quot;</span><span class="p">:</span> <span class="n">go</span><span class="o">.</span><span class="n">Layout</span><span class="p">(</span><span class="n">barmode</span><span class="o">=</span><span class="s1">&#39;overlay&#39;</span><span class="p">,</span>
+                             <span class="n">title</span><span class="o">=</span><span class="n">overlay_hist_normalized</span><span class="o">.</span><span class="n">title</span><span class="p">)},</span>
+        <span class="n">output_type</span><span class="o">=</span><span class="s2">&quot;div&quot;</span><span class="p">,</span>
+        <span class="n">show_link</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">overlay_hist_normalized</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">html_out</span><span class="p">:</span>
+        <span class="n">html_out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">overlay_hist_normalized</span><span class="o">.</span><span class="n">html</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">overlay_hist</span><span class="p">,</span> <span class="n">overlay_hist_normalized</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="run_tests"><a class="viewcode-back" href="../../../grandflow.plot.html#grandflow.plot.plot.run_tests">[docs]</a><span class="k">def</span> <span class="nf">run_tests</span><span class="p">():</span>
+    <span class="kn">import</span> <span class="nn">pickle</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&quot;nanotest/sequencing_summary.pickle&quot;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">))</span>
+    <span class="n">scatter</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;lengths&quot;</span><span class="p">],</span>
+        <span class="n">y</span><span class="o">=</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;quals&quot;</span><span class="p">],</span>
+        <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Read lengths&#39;</span><span class="p">,</span> <span class="s1">&#39;Average read quality&#39;</span><span class="p">],</span>
+        <span class="n">path</span><span class="o">=</span><span class="s2">&quot;LengthvsQualityScatterPlot&quot;</span><span class="p">,</span>
+        <span class="n">plots</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;dot&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;kde&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;hex&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;pauvre&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span>
+    <span class="n">time_plots</span><span class="p">(</span>
+        <span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span>
+        <span class="n">path</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">,</span>
+        <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#4CB391&quot;</span><span class="p">)</span>
+    <span class="n">length_plots</span><span class="p">(</span>
+        <span class="n">array</span><span class="o">=</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;lengths&quot;</span><span class="p">],</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;lengths&quot;</span><span class="p">,</span>
+        <span class="n">path</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+    <span class="n">spatial_heatmap</span><span class="p">(</span>
+        <span class="n">array</span><span class="o">=</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;channelIDs&quot;</span><span class="p">],</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Number of reads generated per channel&quot;</span><span class="p">,</span>
+        <span class="n">path</span><span class="o">=</span><span class="s2">&quot;ActivityMap_ReadsPerChannel&quot;</span><span class="p">)</span></div>
+
+
+<span class="n">checkvalidColor</span> <span class="o">=</span> <span class="n">check_valid_color</span>
+<span class="n">checkvalidFormat</span> <span class="o">=</span> <span class="n">check_valid_format</span>
+<span class="n">spatialHeatmap</span> <span class="o">=</span> <span class="n">spatial_heatmap</span>
+<span class="n">lengthPlots</span> <span class="o">=</span> <span class="n">length_plots</span>
+<span class="n">timePlots</span> <span class="o">=</span> <span class="n">time_plots</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">run_tests</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, GrandOmics.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

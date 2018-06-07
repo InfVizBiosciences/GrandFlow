@@ -1,0 +1,38 @@
+grandflow.stat package
+======================
+
+Submodules
+----------
+
+grandflow.stat.ReadStat module
+------------------------------
+
+.. automodule:: grandflow.stat.ReadStat
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+grandflow.stat.length\_plot module
+----------------------------------
+
+.. automodule:: grandflow.stat.length_plot
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+grandflow.stat.seq\_stat module
+-------------------------------
+
+.. automodule:: grandflow.stat.seq_stat
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: grandflow.stat
+    :members:
+    :undoc-members:
+    :show-inheritance:

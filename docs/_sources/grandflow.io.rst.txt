@@ -1,0 +1,118 @@
+grandflow.io package
+====================
+
+Subpackages
+-----------
+
+.. toctree::
+
+    grandflow.io.align
+    grandflow.io.dataset
+
+Submodules
+----------
+
+grandflow.io.BarcodeH5Reader module
+-----------------------------------
+
+.. automodule:: grandflow.io.BarcodeH5Reader
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+grandflow.io.BasH5IO module
+---------------------------
+
+.. automodule:: grandflow.io.BasH5IO
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+grandflow.io.FastaIO module
+---------------------------
+
+.. automodule:: grandflow.io.FastaIO
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+grandflow.io.FastqIO module
+---------------------------
+
+.. automodule:: grandflow.io.FastqIO
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+grandflow.io.FofnIO module
+--------------------------
+
+.. automodule:: grandflow.io.FofnIO
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+grandflow.io.GffIO module
+-------------------------
+
+.. automodule:: grandflow.io.GffIO
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+grandflow.io.VcfIO module
+-------------------------
+
+.. automodule:: grandflow.io.VcfIO
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+grandflow.io.base module
+------------------------
+
+.. automodule:: grandflow.io.base
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+grandflow.io.decorators module
+------------------------------
+
+.. automodule:: grandflow.io.decorators
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+grandflow.io.opener module
+--------------------------
+
+.. automodule:: grandflow.io.opener
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+grandflow.io.rangeQueries module
+--------------------------------
+
+.. automodule:: grandflow.io.rangeQueries
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+grandflow.io.sequence module
+----------------------------
+
+.. automodule:: grandflow.io.sequence
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: grandflow.io
+    :members:
+    :undoc-members:
+    :show-inheritance:

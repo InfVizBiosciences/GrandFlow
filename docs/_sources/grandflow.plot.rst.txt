@@ -1,0 +1,22 @@
+grandflow.plot package
+======================
+
+Submodules
+----------
+
+grandflow.plot.plot module
+--------------------------
+
+.. automodule:: grandflow.plot.plot
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: grandflow.plot
+    :members:
+    :undoc-members:
+    :show-inheritance:

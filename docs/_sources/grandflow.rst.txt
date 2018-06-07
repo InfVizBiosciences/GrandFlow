@@ -1,0 +1,48 @@
+grandflow package
+=================
+
+Subpackages
+-----------
+
+.. toctree::
+
+    grandflow.io
+    grandflow.plot
+    grandflow.stat
+    grandflow.util
+
+Submodules
+----------
+
+grandflow.Pipeline module
+-------------------------
+
+.. automodule:: grandflow.Pipeline
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+grandflow.main module
+---------------------
+
+.. automodule:: grandflow.main
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+grandflow.sv module
+-------------------
+
+.. automodule:: grandflow.sv
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: grandflow
+    :members:
+    :undoc-members:
+    :show-inheritance:
