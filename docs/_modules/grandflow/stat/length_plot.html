@@ -7,7 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>grandflow.stat.length_plot &#8212; GrandFlow v0.0.1 documentation</title>
-    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript" src="../../../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../../../_static/jquery.js"></script>
@@ -15,15 +15,21 @@
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
-    <link rel="search" title="Search" href="../../../search.html" />
-   
-  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
-  
-  
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
+    <link rel="search" title="Search" href="../../../search.html" /> 
   </head><body>
-  
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">GrandFlow v0.0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
 
     <div class="document">
       <div class="documentwrapper">
@@ -43,7 +49,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">grandflow.io</span> <span class="k">import</span> <span class="n">FastaReader</span><span class="p">,</span> <span class="n">FastqReader</span>
-<span class="kn">from</span> <span class="nn">grandflow.plot.plot</span> <span class="k">import</span> <span class="n">length_plots</span>
+<span class="kn">from</span> <span class="nn">grandflow.plot.lib</span> <span class="k">import</span> <span class="n">length_plots</span>
 
 
 <div class="viewcode-block" id="ReadStat"><a class="viewcode-back" href="../../../grandflow.stat.html#grandflow.stat.length_plot.ReadStat">[docs]</a><span class="k">class</span> <span class="nc">ReadStat</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -147,7 +153,6 @@
 
 <div class="viewcode-block" id="ReadStat.seq_stat"><a class="viewcode-back" href="../../../grandflow.stat.html#grandflow.stat.length_plot.ReadStat.seq_stat">[docs]</a>    <span class="k">def</span> <span class="nf">seq_stat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">filenames</span><span class="p">,</span>
-                 <span class="n">ngs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">fofn</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">thread</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                  <span class="n">min_len</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
@@ -237,9 +242,6 @@
 
         <span class="c1"># 2. get the N10-N90 statstics</span>
         <span class="c1"># length: the N{i} value; number: number of reads which length &gt;= N{i}</span>
-        <span class="c1"># if the input file is ngs short reads, skip the following steps.</span>
-        <span class="k">if</span> <span class="n">ngs</span><span class="p">:</span>
-            <span class="k">return</span> <span class="mi">1</span>
 
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Distribution of record length&quot;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%5s</span><span class="se">\t</span><span class="si">%15s</span><span class="se">\t</span><span class="si">%15s</span><span class="se">\t</span><span class="si">%10s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="s2">&quot;Type&quot;</span><span class="p">,</span> <span class="s2">&quot;Bases&quot;</span><span class="p">,</span> <span class="s2">&quot;Count&quot;</span><span class="p">,</span> <span class="s2">&quot;%Bases&quot;</span><span class="p">))</span>
@@ -264,7 +266,7 @@
         <span class="n">length_plots</span><span class="p">(</span>
             <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">lengths</span><span class="p">),</span>
             <span class="s1">&#39;length&#39;</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_proj_name</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span><span class="p">,</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_proj_name</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span><span class="p">),</span>
             <span class="n">n50</span><span class="o">=</span><span class="n">N50</span><span class="p">,</span>
             <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Histogram of read lengths(</span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_proj_name</span><span class="p">)</span>
         <span class="c1"># write out record length for plot</span>
@@ -335,9 +337,8 @@
         <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;number of thread process&quot;</span><span class="p">)</span>
     <span class="n">args</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;-ngs&quot;</span><span class="p">,</span>
-        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;input fastq reads is short reads from ngs&quot;</span><span class="p">)</span>
+        <span class="s2">&quot;--outdir&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;output directory&quot;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">args</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span></div>
 
@@ -345,7 +346,7 @@
 <div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../grandflow.stat.html#grandflow.stat.length_plot.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
     <span class="n">args</span> <span class="o">=</span> <span class="n">get_args</span><span class="p">()</span>
     <span class="n">rs</span> <span class="o">=</span> <span class="n">ReadStat</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">proj_name</span><span class="p">)</span>
-    <span class="n">rs</span><span class="o">.</span><span class="n">seq_stat</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">input</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">ngs</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">fofn</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">thread</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">min_len</span><span class="p">)</span></div>
+    <span class="n">rs</span><span class="o">.</span><span class="n">seq_stat</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">input</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">fofn</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">thread</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">min_len</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">outdir</span><span class="p">)</span></div>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
@@ -356,15 +357,10 @@
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper"><div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="../../../index.html">Documentation overview</a><ul>
-  <li><a href="../../index.html">Module code</a><ul>
-  </ul></li>
-  </ul></li>
-</ul>
-</div>
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/grandomics.png" alt="Logo"/>
+            </a></p>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <div class="searchformwrapper">
@@ -381,17 +377,22 @@
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="footer">
-      &copy;2018, GrandOmics.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
-      
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">GrandFlow v0.0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
     </div>
-
-    
-
-    
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, GrandOmics.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.4.
+    </div>
   </body>
 </html>
