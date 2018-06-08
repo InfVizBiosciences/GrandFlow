@@ -14,7 +14,7 @@
 
 ```
 # 宝德云
-export PYTHONPATH=/data/GrandFlow:$PYTHONPATH
+export PYTHONPATH=/data/grandanalysis:$PYTHONPATH
 
 ```
 
@@ -22,15 +22,16 @@ export PYTHONPATH=/data/GrandFlow:$PYTHONPATH
 
 使用例子
 
-./example
-
+```
+cd example
+```
 
 读取 fastq
 
 ```
 from grandflow.core.io import FastqReader
 
-fr = FastqReader('example/data/test.fq.gz')
+fr = FastqReader('./data/test.fq.gz')
 for xx in fr:
     print('header:' + xx.header)
     print('comment:' + xx.comment)
@@ -44,7 +45,7 @@ for xx in fr:
 
 from grandflow.core.io import VcfReader
 
-vr = VcfReader('example/data/test.vcf')
+vr = VcfReader('./data/test.vcf')
 for xx in vr:
     print('chrom:' + xx.chrom)
     print('id:' + xx.id)
@@ -56,6 +57,8 @@ for xx in vr:
 ## 文档
 
 更详细的内容，可以参考GrandFlow文档
+
+https://grandomics-bioinfo.github.io/GrandFlow/
 
 http://192.168.1.200:8001/index.html (北京地区IP访问)
 
