@@ -437,7 +437,7 @@ def sv_caller(name, proj_name, input_bam, config):
     return sv_caller_task
 
 
-def fastq_stat(name, proj_name, fq_list, config):
+def fastq_stat(name, proj_name, fq_list_file, config):
     """TODO: Docstring for fastq_stat.
 
     Args:
@@ -447,9 +447,9 @@ def fastq_stat(name, proj_name, fq_list, config):
 
     """
     config[name].update({
-        'fq_list': fq_list,
+        'fq_list_file': fq_list_file,
         'proj_name': proj_name,
-        'out_dir': name
+        'out_dir': 'stat'
     })
 
     fastq_stat_task = Task(
