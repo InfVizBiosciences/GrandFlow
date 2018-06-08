@@ -3,6 +3,7 @@
 To statistics on a list of fasta/fastq files
 
 """
+import os
 import argparse
 import collections
 from multiprocessing import Pool
@@ -112,11 +113,13 @@ class ReadStat(object):
         """
         pass
 
+    # rs.seq_stat(args.input, args.fofn, args.thread, args.min_len, args.outdir)
     def seq_stat(self,
                  filenames,
+                 outdir,
                  fofn=False,
                  thread=1,
-                 min_len=0):
+                 min_len=0,):
         """
         statistics on fastq files
         :param filenames:
@@ -307,7 +310,7 @@ description:
 def main():
     args = get_args()
     rs = ReadStat(args.proj_name)
-    rs.seq_stat(args.input, args.fofn, args.thread, args.min_len, args.outdir)
+    rs.seq_stat(args.input, args.outdir, args.fofn, args.thread, args.min_len)
 
 
 if __name__ == "__main__":
