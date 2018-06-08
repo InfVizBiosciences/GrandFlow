@@ -7,11 +7,10 @@ from grandflow.io import readFofn
 from grandflow.Pipeline import Pipeline, Task, get_config
 
 # 读取配置文件
-main_path = '/data/lipidong/grandanalysis'
 config = get_config('/data/grandanalysis/grandsv/config.yaml')
 
 # 新建流程，同时设置流程的运行的路径
-path = './'
+path = '~/test'
 sv = Pipeline('sv', path)
 
 # ngmlr module
@@ -76,6 +75,6 @@ sniffles = Task(
 sv.add_task(sniffles, merge_bam)
 
 # 生成sjm运行文件
-sv.sjm('sv.sjm.txt')
+sv.sjm('~/test/sv.sjm.txt')
 # 生成shell脚本
-sv.shell('sv.shell.sh')
+sv.shell('~/test/sv.shell.sh')

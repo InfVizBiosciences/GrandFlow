@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import time
 
-from grandflow.stat.timer import StageTimer
+from grandflow.util.timer import StageTimer
 
 timer = StageTimer()
 timer.start('timer1')
