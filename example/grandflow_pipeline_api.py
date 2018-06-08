@@ -8,19 +8,17 @@ from grandflow.Pipeline import Pipeline, Task, get_config
 
 # 读取配置文件
 main_path = '/data/lipidong/grandanalysis'
-config = get_config(
-    '{main_path}/grandflow/config/config.yaml'.format(main_path=main_path))
+config = get_config('/data/grandanalysis/grandsv/config.yaml')
 
 # 新建流程，同时设置流程的运行的路径
-path = '{main_path}/grandsv/example'.format(main_path=main_path)
-sv = Pipeline(path)
+path = './'
+sv = Pipeline('sv', path)
 
 # ngmlr module
 # 读取文件
 # 提供多个人家，sjm会并行运算
 fq_list = [
-    xx for xx in readFofn('{main_path}/grandsv/example/test.fq.list'.format(
-        main_path=main_path))
+    xx for xx in readFofn('/data/grandanalysis/grandflow/example/data/test.fq.list')
 ]
 
 ngmlr_output = [

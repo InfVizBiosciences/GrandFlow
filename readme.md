@@ -86,3 +86,8 @@ Github介绍：http://118.26.69.170:8000/doku.php?id=%E5%B8%8C%E6%9C%9B%E7%BB%84
 
 GrandWiki文档：http://118.26.69.170:8000/doku.php?id=%E5%B8%8C%E6%9C%9B%E7%BB%84%E7%94%9F%E4%BF%A1%E9%83%A8:%E7%94%9F%E4%BF%A1%E9%83%A8%E8%B5%84%E6%96%99:%E7%9F%A5%E8%AF%86%E5%88%86%E4%BA%AB:sjm%E4%BD%9C%E4%B8%9A%E7%AE%A1%E7%90%86%E7%B3%BB%E7%BB%9F
 
+```
+#  sjm 每次最多投100个任务，后面的会陆陆续续投递，速度较慢。为了解决这个问题，可以设置几个参数为10000
+sjm --max_running 10000 --max_dispatch 10000 --max_pending 10000 M18A0771_sv.minimap2.sjm
+```
+
