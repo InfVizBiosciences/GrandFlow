@@ -232,7 +232,7 @@ class ReadStat(object):
             'length',
             os.path.join(outdir, self._proj_name + '.'),
             n50=N50,
-            title='Histogram of read lengths(%s)' % self._proj_name)
+            title=self._proj_name)
         # write out record length for plot
         # with open("record.len", "w") as fh:
             # fh.write("\n".join(map(str, lengths)))
