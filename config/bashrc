@@ -1,0 +1,2 @@
+export PYTHONPATH=/data/grandanalysis:$PYTHONPATH
+export PATH=/data/software/SJM/bin/:$PATH

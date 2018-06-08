@@ -1,48 +1,76 @@
 paras:
-  samtools: /data/software/bin/samtools
-  bedtools: /data/software/bedtools2/bin/bedtools
-  lastal: /data/liangfan/pipeline/sv/bin/lastal
-  hg38: /data/xieshang/database/ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa
-  hg19: /data/xieshang/database/ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/human_g1k_v37.fasta
+    queue: all.q,Med.q
 
-bwa:
-  cmd: ''
-  memory: 16g
-  thread: 16
-  queue: all.q
+database:
+    hg19: /data/xieshang/database/ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/human_g1k_v37.fasta
+    hg38: /data/xieshang/database/ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa
+
+softwares:
+    grandanalysis: /data/lipidong/grandanalysis
+    python2: /data/software/bin/python
+    python3: /data/software/bin/python3
+    perl: /usr/bin/perl
+    samtools: /data/software/bin/samtools
+    sambamba: /data/software/nanosv/sambamba_v0.6.3
+    bedtools: /data/software/bedtools2/bin/bedtools
+    last_path: /data/software/last-912/bin/bin
+    last_db: /data/liangfan/pipeline/sv/bin/../database/last_db/humdb
+    minimap2: /data/xieshang/bin/minimap2
+    ngmlr: /data/software/bin/ngmlr
+    sniffles: /data/software/bin/sniffles
+    nanosv_path: /data/software/nanosv_python/nanosv/
+    picky: /data/software/picky/Picky_v0.2.a/src/picky.pl
 
 last:
-  cmd: 'lastal -P {thread} -Q1 {last_db} {fq} -p {params} | last-split > {output}.last.maf && maf-convert -d sam {output}.last.maf | {samtools} view -bS - | {samtools} sort -m {memory} -o {output} - && rm  {output}.last.maf'
-  memory: 16G
-  thread: 8
-  queue: all.q
+    cmd: '{last_path}/lastal -P {thread} -Q1 {last_db} {fq} -p {last_params} | {last_path}last-split > {output}.last.maf && maf-convert -d sam {output}.last.maf | {samtools} view -bS - | {samtools} sort -m {memory} -o {output} - && rm  {output}.last.maf'
+    last_params: /data/liangfan/pipeline/sv/bin/../config/nanopore.params
+    memory: 16g
+    thread: 8
+
+minimap2:
+    cmd: '{minimap2} -a -x map-ont {ref} {fq} | samtools view -Sb -@ {thread} - | samtools sort -@ {thread} - -o {output}'
+    memory: 16g
+    thread: 4
 
 ngmlr:
-  cmd: 'ngmlr -t {thread} -x ont -r {ref} -q {fq} | {samtools} sort -m {memory} -o {output} -'
-  memory: 16g
-  thread: 8
-  queue: all.q
+    cmd: '{ngmlr} -t {thread} -x ont -r {ref} -q {fq} | {samtools} sort -m {memory} -o {output} -'
+    memory: 16g
+    thread: 4
 
 merge_bam:
     cmd: '{samtools} merge -f {output} {input_list}'
     memory: 1g
     thread: 1
-    queue: all.q
 
 sniffles:
-  cmd: '
-    sniffles
-    --report_BND
-    --ignore_sd
-    -q 0
-    --genotype
-    -n  10
-    -t 20
-    -l 50
-    -s 1
-    -m {bam}
-    -v {output}'
-  memory: 16g
-  thread: 8
-  queue: all.q
+    cmd: '
+        {sniffles}
+        --report_BND
+        --ignore_sd
+        -q 0
+        -n  10
+        -t {thread}
+        -l 50
+        -s 1
+        -m {bam}
+        -v {output}'
+    memory: 16g
+    thread: 4
 
+picky:
+    cmd: '{perl} {picky} '
+
+nanosv:
+    cmd: '{python3} {nanosv_path}/nanoNanoSV.py -s ${sambamba} -c {nanosv_path}/config.ini -b {nanosv_path}/bedfiles/human_hg19.bed -o {output} {bam}'
+    memory: 16g
+    thread: 8
+
+fastq_stat:
+    cmd: '{grandanalysis}/grandflow/stat/length_plot.py --proj_name {proj_name} --fofn  {fq_list_file} -t {thread} --outdir {out_dir}'
+    memory: 4g
+    thread: 8
+
+bam_stat:
+    cmd: '{python3} {grandanalysis}/grandflow/stat/BamStat.py --proj_name {proj_name} --bam {input_bam} -t {thread} --title {proj_name} --prefix {proj_name} --out_dir {out_dir}'
+    memory: 4g
+    thread: 8
