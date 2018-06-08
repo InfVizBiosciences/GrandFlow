@@ -29,7 +29,7 @@ cd example
 读取 fastq
 
 ```
-from grandflow.core.io import FastqReader
+from grandflow.io import FastqReader
 
 fr = FastqReader('./data/test.fq.gz')
 for xx in fr:
@@ -43,7 +43,7 @@ for xx in fr:
 
 ```
 
-from grandflow.core.io import VcfReader
+from grandflow.io import VcfReader
 
 vr = VcfReader('./data/test.vcf')
 for xx in vr:
