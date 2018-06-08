@@ -1,1 +1,1 @@
-python3 ../stat/BamStat.py --bam /data/lipidong/grandanalysis/grandflow/example/data/test.bam --title fig_title --outdir /data/lipidong/test --prefix file_prefix
+python3 /data/grandanalysis/grandflow/stat/BamStat.py --bam /data/lipidong/grandanalysis/grandflow/example/data/test.bam --title fig_title --outdir ~/test --prefix file_prefix

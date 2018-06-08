@@ -1,1 +1,1 @@
-python3 ../stat/length_plot.py -t 10 --fofn ./test.fonf --outdir /data/lipidong/test --proj_name TEST
+python3 /data/grandanalysis/grandflow/stat/length_plot.py -t 10 /home/yangqi/sdb1/26_Nanopore_Tumor_5_zhaohong/02_M18A0728_HS2/rawdata/BNP18L0030-0427-A1.fastq_120.fastq /home/yangqi/sdb1/26_Nanopore_Tumor_5_zhaohong/02_M18A0728_HS2/rawdata/BNP18L0030-0427-A1.fastq_121.fastq  --outdir ~/test --proj_name TEST

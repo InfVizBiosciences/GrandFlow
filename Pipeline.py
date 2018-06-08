@@ -80,11 +80,11 @@ class Pipeline(object):
 
         """
         if path:
-            self._path = path
+            self._path = os.path.expanduser(path)
             mkdir(path)
         else:
             self._path = os.getcwd()
-
+        mkdir(os.path.join(self._path, 'log'))
         if name:
             self._name = name
         else:
@@ -141,6 +141,7 @@ class Pipeline(object):
             with open(output, 'w') as f:
                 f.write(cmd_chunk_str + '\n')
                 f.write(order_chunk_str + '\n')
+                f.write('log_dir log' + '\n')
             self._sjm_output = output
         else:
             return '\n'.join([cmd_chunk_str, order_chunk_str])
