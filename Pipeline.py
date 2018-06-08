@@ -84,7 +84,7 @@ class Pipeline(object):
             mkdir(path)
         else:
             self._path = os.getcwd()
-        mkdir(os.path.join(path, 'log'))
+        mkdir(os.path.join(self._path, 'log'))
         if name:
             self._name = name
         else:
