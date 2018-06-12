@@ -22,7 +22,7 @@ softwares:
     picky: /data/software/picky/Picky_v0.2.a/src/picky.pl
 
 last:
-    cmd: '{last_path}/lastal -P {thread} -Q1 {last_db} {fq} -p {last_params} | {last_path}last-split > {output}.last.maf && maf-convert -d sam {output}.last.maf | {samtools} view -bS - | {samtools} sort -m {memory} -o {output} - && rm  {output}.last.maf'
+    cmd: '{last_path}/lastal -P {thread} -Q1 {last_db} {fq} -p {last_params} | {last_path}/last-split > {output}.last.maf && maf-convert -d sam {output}.last.maf | {samtools} view -bS - | {samtools} sort -m {memory} -o {output} - && rm  {output}.last.maf'
     last_params: /data/liangfan/pipeline/sv/bin/../config/nanopore.params
     memory: 16g
     thread: 8
