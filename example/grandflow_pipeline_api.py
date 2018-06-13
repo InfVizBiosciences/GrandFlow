@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+'''
+usage:
+    set path
+    set fq_list
+    update paras
+        para -x:ngmlr(pacbio/ont) minimap2(map-pb/map-ont)
+'''
+
 import os
 
 from grandflow.io import readFofn
@@ -13,25 +21,30 @@ config = get_config('/data/grandanalysis/grandsv/config.yaml')
 path = '~/test'
 sv = Pipeline('sv', path)
 
-# ngmlr module
+#mkdir log
+log_path = os.path.join(path,"log")
+if not os.path.exists(log_path):
+    os.mkdir(log_path)
+
 # 读取文件
 # 提供多个人家，sjm会并行运算
 fq_list = [
     xx for xx in readFofn('/data/grandanalysis/grandflow/example/data/test.fq.list')
 ]
 
-ngmlr_output = [
+aligner_bam_output = [
     os.path.join(path,
                  os.path.basename(xx).replace('fq', 'bam')) for xx in fq_list
 ]
 
+# ngmlr module
 config['ngmlr'].update({
     'ref': ('/data/xieshang/database/ftp.1000genomes.ebi.ac.uk/vol1/ftp/'
             'technical/reference/human_g1k_v37.fasta'),
     'fq':
     fq_list,
     'output':
-    ngmlr_output
+    aligner_bam_output
 })
 
 # 新建任务
@@ -54,17 +67,17 @@ merge_bam_output = os.path.join(path, 'merge.bam')
 merge_bam = Task(
     'merge_bam',
     'samtools merge {output_bam} {input_bam}'.format(
-        output_bam=merge_bam_output, input_bam=' '.join(ngmlr_output)),
+        output_bam=merge_bam_output, input_bam=' '.join(aligner_bam_output)),
     sjm_paras=config['sniffles'])
 
 # 模块的先后循序，所以需要设定前一个模块的名称
 sv.add_task(merge_bam, prev_task=ngmlr)
 
 # sniffles
-sniffles_output = 'sniffles_output.vcf'
+sniffles_output = os.path.join(path, 'sniffles_output.vcf')
 config['sniffles'].update({
     'bam': merge_bam_output,
-    'output': os.path.join(path, 'sniffles_output.vcf')
+    'output': sniffles_output
 })
 sniffles = Task(
     'sniffles',
@@ -75,6 +88,6 @@ sniffles = Task(
 sv.add_task(sniffles, merge_bam)
 
 # 生成sjm运行文件
-sv.sjm('~/test/sv.sjm.txt')
+sv.sjm('%s/sv.sjm.txt'%(path))
 # 生成shell脚本
-sv.shell('~/test/sv.shell.sh')
+sv.shell('%s/sv.shell.sh'%(path))
