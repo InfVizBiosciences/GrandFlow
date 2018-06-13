@@ -28,12 +28,14 @@ last:
     thread: 8
 
 minimap2:
-    cmd: '{minimap2} -a -x map-ont {ref} {fq} | samtools view -Sb -@ {thread} - | samtools sort -@ {thread} - -o {output}'
+    cmd: '{minimap2} -a -x {preset} {ref} {fq} | samtools view -Sb -@ {thread} - | samtools sort -@ {thread} - -o {output}'
+    preset: map-ont
     memory: 16g
     thread: 4
 
 ngmlr:
-    cmd: '{ngmlr} -t {thread} -x ont -r {ref} -q {fq} | {samtools} sort -m {memory} -o {output} -'
+    cmd: '{ngmlr} -t {thread} -x {preset} -r {ref} -q {fq} | {samtools} sort -m {memory} -o {output} -'
+    preset: ont
     memory: 16g
     thread: 4
 
