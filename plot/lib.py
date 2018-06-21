@@ -162,7 +162,7 @@ def scatter(x,
         ylim=(minvaly, maxvaly),
         space=0,
         size=10,
-        joint_kws={"s": 1},
+        joint_kws={"s": 3},
         **kargs)
     plot.set_axis_labels(names[0], names[1], fontsize=20)
     if log:
