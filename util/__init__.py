@@ -26,7 +26,7 @@ sjm_paras = {
     'queue': 'all.q'
 }
 
-def safe_open(infile, mode):
+def safe_open(infile, mode='r'):
     if infile.endswith('.gz'):
         import gzip
         return gzip.open(infile, mode)
@@ -84,7 +84,7 @@ def read_line(path):
 
     """
     with open(path) as f:
-        return [xx.rstrip() for xx in f.readlines()]
+        return [xx.rstrip() for xx in f]
 
 
 def mkdir(path, mode=0o777, dir_fd=None):

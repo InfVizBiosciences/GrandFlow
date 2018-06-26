@@ -9,7 +9,7 @@ the example of stat/ReadStat class
 # Change Logs:
 #
 # ---------
-
+from grandflow.stat.ReadStat import ReadStat
 
 rs = ReadStat.ReadStat('data/test.fq.list',thread=4)
 reads_num = rs.get_reads_num() # get the number of reads

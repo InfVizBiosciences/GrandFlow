@@ -292,12 +292,12 @@ class ReadStat(object):
 
         # stdout
         reads_stat_dict_str = """
-        #Statistics for all FastA/Q records
-        file number:   \t{file_num:,}
-        record number: \t{reads_number:,}
-        sum of length: \t{total_length:,}
-        average length:\t{average_length:,}
-        longest length:\t{longest:,}
+#Statistics for all FastA/Q records
+file number\t{file_num:,}
+record number\t{reads_number:,}
+sum of length\t{total_length:,}
+average length\t{average_length:,}
+longest length\t{longest:,}
         """.format(**reads_stat_dict)
 
         with open(os.path.join(output_path,
@@ -357,6 +357,7 @@ description:
 
     args.add_argument("--fq_list", help="file including fastq  paths")
     args.add_argument("--proj_name", help="project name ")
+    args.add_argument("--output_dir", help="output directory ")
     args.add_argument(
         "--min_len",
         type=int,
@@ -376,10 +377,10 @@ description:
 
 def main():
     args = get_args()
-    rs = ReadStat(args.fq_list, args.thread, args.min_len)
+    rs = ReadStat(args.fq_list,args.min_len, args.thread)
     reads_stat_dict = rs.length_stat()
     length_dist_N_dict, length_dist_over_dict = rs.length_distribute()
-    rs.write_reads_stat(proj_name, output_path, reads_stat_dict,
+    rs.write_reads_stat(args.proj_name, args.output_dir, reads_stat_dict,
                         length_dist_N_dict, length_dist_over_dict)
 
 
