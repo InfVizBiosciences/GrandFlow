@@ -60,7 +60,7 @@ def get_config(*args, file_type='yaml'):
     # 如果子模块中没有paras模块的key, 则更新
     # 子模块的参数优先级更高
     for key in config_dict.keys():
-        if key not in  ['paras', 'database', 'softwares']:
+        if key not in ['paras', 'database', 'softwares']:
             config_dict[key].update({
                 k: v
                 for k, v in config_dict['paras'].items()
@@ -82,7 +82,7 @@ class Pipeline(object):
         """
         if path:
             self._path = os.path.expanduser(path)
-            mkdir(path)
+            mkdir(self._path)
         else:
             self._path = os.getcwd()
         mkdir(os.path.join(self._path, 'log'))
@@ -92,7 +92,7 @@ class Pipeline(object):
             self._name = ''
 
         if not sjm_bin:
-           self._sjm_bin = 'sjm'
+            self._sjm_bin = 'sjm'
 
         self.tasks = []
         self._sjm_output = None
@@ -110,7 +110,7 @@ class Pipeline(object):
 
         task.abs_path = os.path.join(self._path, task.path)
         mkdir(task.abs_path)
-        task.proj_name = self._name # set task project name
+        task.proj_name = self._name  # set task project name
         self.tasks.append(task)
 
     def sjm(self, output=None):
@@ -139,6 +139,7 @@ class Pipeline(object):
         order_chunk_str = '\n'.join(order_chunk)
 
         if output:
+            output = os.path.expanduser(output)
             with open(output, 'w') as f:
                 f.write(cmd_chunk_str + '\n')
                 f.write(order_chunk_str + '\n')
@@ -159,10 +160,10 @@ class Pipeline(object):
         os.chdir(self._path)
         sjm_path = os.path.join(self._path, 'sjm')
         os.system('{sjm} -i {sjm_file}'.format(
-            bashrc=os.path.join(os.path.dirname(grandflow.__file__), 'config', 'bashrc'),
+            bashrc=os.path.join(
+                os.path.dirname(grandflow.__file__), 'config', 'bashrc'),
             sjm=self._sjm_bin,
-            sjm_file=self._sjm_output
-        ))
+            sjm_file=self._sjm_output))
 
     def shell(self, output=None):
         """if output, write the shell command line to the output,
@@ -179,6 +180,7 @@ class Pipeline(object):
             cmd_chunk.append(task.shell)
         cmd_chunk_str = '\n'.join(cmd_chunk)
         if output:
+            output = os.path.expanduser(output)
             with open(output, 'w') as f:
                 f.write(cmd_chunk_str)
         else:
@@ -241,11 +243,9 @@ class Task(object):
 
         """
         if isinstance(self._output, list):
-            return [os.path.join(self.path, xx)
-                      for xx in self._output]
+            return [os.path.join(self.path, xx) for xx in self._output]
         else:
             return os.path.join(self.path, self._output)
-
 
     @output.setter
     def output(self, value):
@@ -283,7 +283,8 @@ class Task(object):
             return cmd_dict
 
         for ii in range(len(list(self.cmd_multi_paras_dict.values())[0])):
-            subname = '{proj_name}_{name}_{ii:0>3d}'.format(proj_name=self.proj_name, name=self._name, ii=ii)
+            subname = '{proj_name}_{name}_{ii:0>3d}'.format(
+                proj_name=self.proj_name, name=self._name, ii=ii)
             self._subname_list.append(subname)
             para_dict = copy.deepcopy(self._cmd_paras)
             for key in self.cmd_multi_paras_dict.keys():
@@ -411,17 +412,18 @@ def aligner(name, proj_name, fq_list, config, ref_version):
     # if (not instance(fq_list, list)) and (os.isdir(fq_list)):
         # fq_list = os.listdir(fq_list)
 
-    aligner_output = [os.path.join(name,
-                                   sub_basename(xx,
-                                                'bam',
-                                                mid='.%s.%s' % (name, ref_version)))
-                      for xx in fq_list]
+    aligner_output = [
+        os.path.join(name,
+                     sub_basename(
+                         xx, 'bam', mid='.%s.%s' % (name, ref_version)))
+        for xx in fq_list
+    ]
 
     config[name].update({
         'ref': config['paras'][ref_version],
         'fq': fq_list,
         'output': aligner_output
-})
+    })
 
     aligner_task = Task(
         name,
@@ -431,18 +433,18 @@ def aligner(name, proj_name, fq_list, config, ref_version):
         path=name)
 
     # merge bam
-    merge_bam_output = os.path.join(name, '%s.%s.merge.bam' % (proj_name, name))
+    merge_bam_output = os.path.join(name, '%s.%s.merge.%s.%s.bam' %
+                                    (proj_name, name, name, ref_version))
     config['merge_bam'].update({
         'input_list': ' '.join(aligner_output),
-        'output':merge_bam_output
+        'output': merge_bam_output
     })
     merge_bam_task = Task(
         'merge_bam',
         config['merge_bam']['cmd'],
         cmd_paras=config['merge_bam'],
         sjm_paras=config['merge_bam'],
-        output=merge_bam_output
-    )
+        output=merge_bam_output)
     # merge_bam.output = 'merge.bam'
 
     return aligner_task, merge_bam_task
@@ -461,27 +463,25 @@ def sv_caller(name, proj_name, input_bam, config):
 
     """
     if isinstance(input_bam, list):
-        sv_caller_output = [os.path.join(name,
-                                         '%s.%s.vcf' % (proj_name, name)) for xx in input_bam]
+        sv_caller_output = [
+            os.path.join(name, '%s.%s.vcf' % (proj_name, name))
+            for xx in input_bam
+        ]
     else:
-        sv_caller_output = os.path.join(name, '%s.%s.vcf' % (proj_name, name) )
+        sv_caller_output = os.path.join(name, '%s.%s.vcf' % (proj_name, name))
 
-    config[name].update({
-        'bam': input_bam,
-        'output': sv_caller_output
-    })
+    config[name].update({'bam': input_bam, 'output': sv_caller_output})
     sv_caller_task = Task(
         name,
         config[name]['cmd'],
         cmd_paras=config[name],
         sjm_paras=config[name],
         path=name,
-        output=sv_caller_output
-    )
+        output=sv_caller_output)
     return sv_caller_task
 
 
-def fastq_stat(name, proj_name, fq_list, config):
+def fastq_stat(name, proj_name, fq_list_file, config):
     """TODO: Docstring for fastq_stat.
 
     Args:
@@ -491,7 +491,7 @@ def fastq_stat(name, proj_name, fq_list, config):
 
     """
     config[name].update({
-        'fq_list': fq_list,
+        'fq_list_file': fq_list_file,
         'proj_name': proj_name,
         'out_dir': 'stat'
     })
@@ -501,8 +501,7 @@ def fastq_stat(name, proj_name, fq_list, config):
         config[name]['cmd'],
         cmd_paras=config[name],
         sjm_paras=config[name],
-        path='stat'
-    )
+        path='stat')
     return fastq_stat_task
 
 
@@ -531,9 +530,9 @@ def bam_stat(name, proj_name, input_bam, config):
         config[name]['cmd'],
         cmd_paras=config[name],
         sjm_paras=config[name],
-        path='stat'
-    )
+        path='stat')
     return bam_stat_task
+
 
 def main():
     print('Pipeline Moudle')
