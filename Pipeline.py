@@ -18,9 +18,11 @@ __status__ = 'Dev'
 import collections
 import copy
 import os
+import math
 
 import grandflow
 from grandflow.util import mkdir, sub_basename
+from grandflow.stat.ReadStat import ReadStat
 
 sjm_template = """
 job_begin
@@ -357,6 +359,44 @@ class Task(object):
         return self._name
 
 
+def split_fq(name, proj_name, fq_list_file, line_num, config, thread=4):
+    """TODO: Docstring for split_fq.
+
+    Args:
+        name (str):
+        fq_list_file (str): file path
+        line_num (int): TODO
+        prefix (str): TODO
+
+    Returns: TODO
+
+    """
+
+    output_prefix = os.path.join('split_fq', proj_name)
+    config[name].update({
+        'fq_list_file': fq_list_file,
+        'line_num': int(line_num),
+        'prefix': output_prefix
+})
+    rs = ReadStat(fq_list_file, thread=thread)
+    reads_num = rs.get_reads_num()
+    chunks_num = math.ceil(reads_num/(line_num / 4))
+    split_fq_task = Task(
+        name,
+        config[name]['cmd'],
+        cmd_paras=config[name],
+        sjm_paras=config[name],
+        path='split_fq'
+        # output="{prefix}.split.fq.list".format(prefix=output_prefix)
+    )
+
+    split_fq_task.output = ['{proj_name}.{chunk_id}.fq.gz'.format(
+       proj_name=proj_name,
+       chunk_id = chunk_id
+   ) for chunk_id in range(chunks_num) ]
+    return split_fq_task
+
+
 def aligner(name, proj_name, fq_list, config, ref_version):
     """create aligner task
 
@@ -368,6 +408,10 @@ def aligner(name, proj_name, fq_list, config, ref_version):
     Returns: aligner_task, merge_bam_task
 
     """
+    # if fastq was splited, fq_list is directory
+    # if (not instance(fq_list, list)) and (os.isdir(fq_list)):
+        # fq_list = os.listdir(fq_list)
+
     aligner_output = [
         os.path.join(name,
                      sub_basename(
