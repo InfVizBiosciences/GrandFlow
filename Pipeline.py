@@ -159,7 +159,7 @@ class Pipeline(object):
         """
         os.chdir(self._path)
         sjm_path = os.path.join(self._path, 'sjm')
-        os.system('{sjm} -i {sjm_file}'.format(
+        os.system('{sjm} --max_running 10000 --max_dispatch 10000 --max_pending 10000 {sjm_file}'.format(
             bashrc=os.path.join(
                 os.path.dirname(grandflow.__file__), 'config', 'bashrc'),
             sjm=self._sjm_bin,
