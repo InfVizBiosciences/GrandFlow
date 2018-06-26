@@ -387,16 +387,16 @@ def make_plots(datadf, settings):
         n50 = nanomath.get_N50(np.sort(datadf["lengths"]))
     else:
         n50 = None
-    plots.extend(
-        grandplot.length_plots(
-            array=datadf["lengths"],
-            name="Read length",
-            path=settings["path"],
-            n50=n50,
-            color=color,
-            figformat=settings["format"],
-            title=settings["title"]))
-    logging.info("Created length plots")
+    # plots.extend(
+        # grandplot.length_plots(
+            # array=datadf["lengths"],
+            # name="Read length",
+            # path=settings["path"],
+            # n50=n50,
+            # color=color,
+            # figformat=settings["format"],
+            # title=settings["title"]))
+    # logging.info("Created length plots")
     if "quals" in datadf:
         plots.extend(
             grandplot.scatter(
