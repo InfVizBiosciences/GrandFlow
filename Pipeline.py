@@ -491,9 +491,9 @@ def fastq_stat(name, proj_name, fq_list_file, config):
 
     """
     config[name].update({
-        'fq_list_file': fq_list_file,
+        'fq_list': fq_list_file,
         'proj_name': proj_name,
-        'out_dir': 'stat'
+        'output_dir': 'stat'
     })
 
     fastq_stat_task = Task(
