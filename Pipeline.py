@@ -415,8 +415,8 @@ def aligner(name, proj_name, fq_list, config, ref_version):
     aligner_output = [
         os.path.join(name,
                      sub_basename(
-                         xx, 'bam', mid='.%s.%s' % (name, ref_version)))
-        for xx in fq_list
+                         xx, 'bam', mid='.%s.%s.%s' % (name, ref_version, ii)))
+        for (ii, xx) in enumerate(fq_list)
     ]
 
     config[name].update({
