@@ -13,7 +13,6 @@ __all__ = [ "FastaRecord",
             "FastaTable",
             "IndexedFastaReader",
             "splitFastaHeader"]
-import pdb
 
 from .base import ReaderBase, WriterBase
 from ._utils import splitFileContents

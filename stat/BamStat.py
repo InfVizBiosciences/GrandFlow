@@ -211,7 +211,7 @@ def check_bam(bam, samtype="bam"):
     return samfile
 
 
-def process_bam(bam, **kwargs):
+def process_bam(bam, thread=4, **kwargs):
     """Combines metrics from bam after extraction.
 
     Processing function: calls pool of worker functions
@@ -224,21 +224,16 @@ def process_bam(bam, **kwargs):
     -edit distances to the reference genome scaled by read length
     Returned in a pandas DataFrame
     """
-    logging.info(
-        "Nanoget: Starting to collect statistics from bam file {}.".format(
-            bam))
     samfile = check_bam(bam)
     chromosomes = samfile.references
     params = zip([bam] * len(chromosomes), chromosomes)
-    with cfutures.ProcessPoolExecutor() as executor:
+    with cfutures.ProcessPoolExecutor(max_workers=len(chromosomes)) as executor:
         datadf = pd.DataFrame(
             data=[res for sublist in executor.map(extract_from_bam, params) for res in sublist],
             columns=["readIDs", "quals", "aligned_quals", "lengths",
                      "aligned_lengths", "mapQ", "percentIdentity"]) \
             .dropna(axis='columns', how='all') \
             .dropna(axis='index', how='any')
-    logging.info("Nanoget: bam {} contains {} primary alignments.".format(
-        bam, datadf["lengths"].size))
     return datadf
 
 
