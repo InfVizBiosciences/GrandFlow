@@ -433,8 +433,8 @@ def aligner(name, proj_name, fq_list, config, ref_version):
         path=name)
 
     # merge bam
-    merge_bam_output = os.path.join(name, '%s.%s.merge.%s.%s.bam' %
-                                    (proj_name, name, name, ref_version))
+    merge_bam_output = os.path.join(name, '%s.%s.%s.merged.bam' %
+                                    (proj_name, name, ref_version))
     config['merge_bam'].update({
         'input_list': ' '.join(aligner_output),
         'output': merge_bam_output
@@ -464,13 +464,14 @@ def sv_caller(name, proj_name, input_bam, config):
     """
     if isinstance(input_bam, list):
         sv_caller_output = [
-            os.path.join(name, '%s.%s.vcf' % (proj_name, name))
+            '%s.%s.vcf' % (proj_name, name)
             for xx in input_bam
         ]
     else:
-        sv_caller_output = os.path.join(name, '%s.%s.vcf' % (proj_name, name))
+        sv_caller_output = '%s.%s.vcf' % (proj_name, name)
 
-    config[name].update({'bam': input_bam, 'output': sv_caller_output})
+    sv_caller_output_tmp = os.path.join(name, sv_caller_output) # for tmp use, need to discuss with the author
+    config[name].update({'bam': input_bam, 'output': sv_caller_output_tmp})
     sv_caller_task = Task(
         name,
         config[name]['cmd'],
