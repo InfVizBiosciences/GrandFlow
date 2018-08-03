@@ -94,11 +94,11 @@ def check_valid_color(color):
     If color is invalid the default is returned.
     """
     if color in list(mcolors.CSS4_COLORS.keys()) + ["#4CB391"]:
-        logging.info("Nanoplotter: Valid color {}.".format(color))
+        logging.info("grandplot: Valid color {}.".format(color))
         return color
     else:
         logging.info(
-            "Nanoplotter: Invalid color {}, using default.".format(color))
+            "grandplot: Invalid color {}, using default.".format(color))
         sys.stderr.write("Invalid color {}, using default.\n".format(color))
         return "#4CB391"
 
@@ -111,10 +111,10 @@ def check_valid_format(figformat):
     """
     fig = plt.figure()
     if figformat in list(fig.canvas.get_supported_filetypes().keys()):
-        logging.info("Nanoplotter: valid output format {}".format(figformat))
+        logging.info("grandplot: valid output format {}".format(figformat))
         return figformat
     else:
-        logging.info("Nanoplotter: invalid output format {}".format(figformat))
+        logging.info("grandplot: invalid output format {}".format(figformat))
         sys.stderr.write(
             "Invalid format {}, using default.\n".format(figformat))
         return "png"
@@ -162,7 +162,7 @@ def scatter(x,
         ylim=(minvaly, maxvaly),
         space=0,
         size=10,
-        joint_kws={"s": 3},
+        joint_kws={"s": 1},
         **kargs)
     plot.set_axis_labels(names[0], names[1], fontsize=20)
     if log:
@@ -215,7 +215,7 @@ def check_valid_time_and_sort(df, timescol, days=5, warning=True):
 def time_plots(df, path, title=None, color="#4CB391", figformat="png"):
     """Making plots of time vs read length, time vs quality and cumulative yield."""
     dfs = check_valid_time_and_sort(df, "start_time")
-    logging.info("Nanoplotter: Creating timeplots using {} reads.".format(
+    logging.info("grandplot: Creating timeplots using {} reads.".format(
         len(dfs)))
     cumyields = cumulative_yield(
         dfs=dfs.set_index("start_time"),
@@ -354,14 +354,14 @@ def length_plots(array,
                  figformat="png",
                  binsize=100):
     """Create histogram of read lengths."""
-    logging.info("Nanoplotter: Creating length plots for {}.".format(name))
+    logging.info("grandplot: Creating length plots for {}.".format(name))
     maxvalx = np.amax(array)
     if n50:
         logging.info(
-            "Nanoplotter: Using {} reads with read length N50 of {}bp and maximum of {}bp."
+            "grandplot: Using {} reads with read length N50 of {}bp and maximum of {}bp."
             .format(array.size, n50, maxvalx))
     else:
-        logging.info("Nanoplotter: Using {} reads maximum of {}bp.".format(
+        logging.info("grandplot: Using {} reads maximum of {}bp.".format(
             array.size, maxvalx))
 
     HistType = namedtuple('HistType', 'weight name binsize ylabel')
@@ -471,7 +471,7 @@ def make_layout(maxval):
 def spatial_heatmap(array, path, title=None, color="Greens", figformat="png"):
     """Taking channel information and creating post run channel activity plots."""
     logging.info(
-        "Nanoplotter: Creating heatmap of reads per channel using {} reads."
+        "grandplot: Creating heatmap of reads per channel using {} reads."
         .format(array.size))
     activity_map = Plot(
         path=path + "." + figformat,
@@ -519,7 +519,7 @@ def violin_or_box_plot(df,
     if y == "quals":
         violin_comp.title = "Comparing base call quality scores"
     if violin:
-        logging.info("Nanoplotter: Creating violin plot for {}.".format(y))
+        logging.info("grandplot: Creating violin plot for {}.".format(y))
         ax = sns.violinplot(
             x="dataset",
             y=y,
@@ -529,7 +529,7 @@ def violin_or_box_plot(df,
             palette=palette,
             linewidth=0)
     else:
-        logging.info("Nanoplotter: Creating box plot for {}.".format(y))
+        logging.info("grandplot: Creating box plot for {}.".format(y))
         ax = sns.boxplot(x="dataset", y=y, data=df, palette=palette)
     if log:
         ticks = [
@@ -549,7 +549,7 @@ def violin_or_box_plot(df,
 def output_barplot(df, figformat, path, title=None, palette=None):
     """Create barplots based on number of reads and total sum of nucleotides sequenced."""
     logging.info(
-        "Nanoplotter: Creating barplots for number of reads and total throughput."
+        "grandplot: Creating barplots for number of reads and total throughput."
     )
     read_count = Plot(
         path=path + "NanoComp_number_of_reads." + figformat,
@@ -593,7 +593,7 @@ def compare_cumulative_yields(df, path, palette=None, title=None):
     dfs = check_valid_time_and_sort(df, "start_time").set_index("start_time")
 
     logging.info(
-        "Nanoplotter: Creating cumulative yield plots using {} reads.".format(
+        "grandplot: Creating cumulative yield plots using {} reads.".format(
             len(dfs)))
     cum_yield_gb = Plot(
         path=path + "NanoComp_CumulativeYieldPlot_Gigabases.html",
