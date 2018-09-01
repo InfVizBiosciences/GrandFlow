@@ -54,6 +54,16 @@ for xx in vr:
 ```
 
 
+
+alinger_pickyp
+
+last/ngmlr/minimap2三个比对器之后接picky，具体执行例子如下（四个参数：比对器名称、工作目录、项目名称、样本数据文件）
+```
+python3 run_aligner_picky.py minimap2 /data/suyanan/scripts/suyanan/GrandFlow/example/demo/minimap2_picky/ HX1 sample.list
+sjm --max_running 10000 --max_dispatch 10000 --max_pending 10000 sv.sjm.txt
+```
+
+
 ## 文档
 
 更详细的内容，可以参考GrandFlow文档

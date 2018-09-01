@@ -19,7 +19,9 @@ softwares:
     ngmlr: /data/software/bin/ngmlr
     sniffles: /data/software/bin/sniffles
     nanosv_path: /data/software/nanosv_python/nanosv/
-    picky: /data/software/picky/Picky_v0.2.a/src/picky.pl
+    picky: /data/software/Picky/src/picky.pl
+    LASTALDB: /data/suyanan/database/GRCh38/GRCh38.lastdb
+    LASTALDBFASTA: /data/suyanan/database/GRCh38/GRCh38.fa
 
 last:
     cmd: '{last_path}/lastal -P {thread} -Q1 {last_db} {fq} -p {last_params} | {last_path}/last-split > {output}.last.maf && maf-convert -d sam {output}.last.maf | {samtools} view -bS - | {samtools} sort -m {memory} -o {output} - && rm  {output}.last.maf'
@@ -27,17 +29,52 @@ last:
     memory: 16g
     thread: 8
 
+last_picky:
+    cmd: '{last_path}/lastal -C2 -K2 -r1 -q3 -a2 -b1 -v -v -P {thread} -Q {input_format} {LASTALDB} {fq} 2>{log_prefix}.lastal.log | {picky} selectRep --thread {thread} --preload 6 1>{align} 2>{log_prefix}.selectRep.log && cat {align} | {picky} callSV --oprefix {oprefix} --fastq {fq} --genome {LASTALDBFASTA} --exclude=chrM --sam && {picky} xls2vcf --xls {oprefix}.profile.DEL.xls --xls {oprefix}.profile.INS.xls --xls {oprefix}.profile.INDEL.xls --xls {oprefix}.profile.INV.xls --xls {oprefix}.profile.TTLC.xls --xls {oprefix}.profile.TDSR.xls --xls {oprefix}.profile.TDC.xls > {oprefix}.allsv.vcf'
+    input_format: 1        
+    memory: 32g
+    thread: 8
+
+
 minimap2:
     cmd: '{minimap2} -a -x {preset} {ref} {fq} | samtools view -Sb -@ {thread} - | samtools sort -@ {thread} - -o {output}'
     preset: map-ont
     memory: 16g
     thread: 4
 
+minimap2_picky: 
+    cmd: '{minimap2} -t {thread} -a -x {preset} {hg38} {fq} > {aligner_prefix}.sam && tail -n +2 {aligner_prefix}.sam | {picky} sam2align > {aligner_prefix}.align && cat {aligner_prefix}.align | {picky} callSV --oprefix {oprefix} --fastq {fq} --exclude=chrM && {picky} xls2vcf --xls {oprefix}.profile.DEL.xls --xls {oprefix}.profile.INS.xls --xls {oprefix}.profile.INDEL.xls --xls {oprefix}.profile.INV.xls --xls {oprefix}.profile.TTLC.xls --xls {oprefix}.profile.TDSR.xls --xls {oprefix}.profile.TDC.xls > {oprefix}.allsv.vcf'
+    preset: map-ont
+    memory: 16g
+    thread: 4 
+
+
 ngmlr:
     cmd: '{ngmlr} -t {thread} -x {preset} -r {ref} -q {fq} | {samtools} sort -m {memory} -o {output} -'
     preset: ont
     memory: 16g
     thread: 4
+
+ngmlr_picky:
+    cmd: '{ngmlr} -t {thread} -x {presets} -r {hg38} -q {fq} -o {aligner_prefix}.sam && tail -n +2 {aligner_prefix}.sam | {picky} sam2align > {aligner_prefix}.align && cat {aligner_prefix}.align | {picky} callSV --oprefix {oprefix} --fastq {fq} --exclude=chrM && {picky} xls2vcf --xls {oprefix}.profile.DEL.xls --xls {oprefix}.profile.INS.xls --xls {oprefix}.profile.INDEL.xls --xls {oprefix}.profile.INV.xls --xls {oprefix}.profile.TTLC.xls --xls {oprefix}.profile.TDSR.xls --xls {oprefix}.profile.TDC.xls > {oprefix}.allsv.vcf'
+    presets: ont
+    memory: 16g
+    thread: 4
+
+
+picky_vcf_by_xls:
+    cmd: 'cat {svtype_xls_files} > {SAMPLE}.all.sv.profile.{SVTYPE}.xls && {picky} xls2vcf --xls {SAMPLE}.all.sv.profile.{SVTYPE}.xls > {SAMPLE}.all.sv.profile.{SVTYPE}.vcf'
+    memory: 8g
+    thread: 1
+picky_vcf_by_xls_all:
+    cmd: '{picky} xls2vcf --xls {SAMPLE}.all.sv.profile.DEL.xls --xls {SAMPLE}.all.sv.profile.INS.xls --xls {SAMPLE}.all.sv.profile.INDEL.xls --xls {SAMPLE}.all.sv.profile.INV.xls --xls {SAMPLE}.all.sv.profile.TTLC.xls --xls {SAMPLE}.all.sv.profile.TDSR.xls --xls {SAMPLE}.all.sv.profile.TDC.xls > {SAMPLE}.byxls.vcf'
+    memory: 64g
+    thread: 1
+    
+picky_vcf_by_align:
+    cmd: 'cat {align_files} > {SAMPLE}.all.align && cat {SAMPLE}.all.align | {picky} callSV --oprefix {SAMPLE}.all -exclude=chrM 2>{SAMPLE}.all.callSV.log && {picky} xls2vcf --xls {SAMPLE}.all.profile.DEL.xls --xls {SAMPLE}.all.profile.INS.xls --xls {SAMPLE}.all.profile.INDEL.xls --xls {SAMPLE}.all.profile.INV.xls --xls {SAMPLE}.all.profile.TTLC.xls --xls {SAMPLE}.all.profile.TDSR.xls --xls {SAMPLE}.all.profile.TDC.xls > {SAMPLE}.byalign.vcf'
+    memory: 128g
+    thread: 1
 
 merge_bam:
     cmd: '{samtools} merge -f {output} {input_list}'
